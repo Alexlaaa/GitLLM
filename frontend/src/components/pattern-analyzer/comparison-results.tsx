@@ -169,40 +169,94 @@ export default function ComparisonResults({
                 </TabsContent>
 
                 <TabsContent value="insights" className="mt-0">
-                  <Card className="p-6 bg-gray-50 text-gray-800">
-                    <div className="mb-6">
-                      <h4 className="font-semibold text-base text-gray-900 mb-2">Overview</h4>
-                      <p className="text-sm whitespace-pre-line text-gray-800">
-                        {currentResult.analysis.insights}
-                      </p>
+                  <Card className="p-0 overflow-hidden rounded-lg shadow-sm bg-white">
+                    {/* Code analysis header */}
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4">
+                      <h3 className="text-lg font-medium">Code Analysis</h3>
+                      <p className="text-sm opacity-90 mt-1">Detailed insights for {currentResult.name}</p>
                     </div>
-
-                    <Separator className="my-5" />
-
-                    <div className="mb-6">
-                      <h4 className="font-semibold text-base text-gray-900 mb-2">
-                        Technical Details
-                      </h4>
-                      <div className="text-sm whitespace-pre-line text-gray-800 bg-white p-4 rounded-md border border-gray-200">
-                        {currentResult.analysis.technicalDetails}
+                    
+                    {/* Analysis sections */}
+                    <div className="grid gap-1 p-1">
+                      {/* Overview section */}
+                      <div className="p-4">
+                        <div className="flex items-center mb-3 text-blue-700">
+                          <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10"/>
+                              <line x1="12" y1="16" x2="12" y2="12"/>
+                              <line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                          </div>
+                          <h4 className="text-base font-semibold">Overview</h4>
+                        </div>
+                        <div className="pl-11">
+                          <p className="text-sm leading-relaxed text-gray-700">
+                            {currentResult.analysis.insights}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="mb-6">
-                      <h4 className="font-semibold text-base text-gray-900 mb-2">
-                        Implementation Approach
-                      </h4>
-                      <div className="text-sm whitespace-pre-line text-gray-800">
-                        {currentResult.analysis.implementationApproach}
+                      
+                      <Separator />
+                      
+                      {/* Technical Details section */}
+                      <div className="p-4">
+                        <div className="flex items-center mb-3 text-purple-700">
+                          <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="16 18 22 12 16 6"/>
+                              <polyline points="8 6 2 12 8 18"/>
+                            </svg>
+                          </div>
+                          <h4 className="text-base font-semibold">Technical Details</h4>
+                        </div>
+                        <div className="pl-11">
+                          <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 text-sm leading-relaxed text-gray-700">
+                            {currentResult.analysis.technicalDetails}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="bg-blue-50 p-5 rounded-md border border-blue-100">
-                      <h4 className="font-semibold text-base text-gray-900 mb-2">
-                        Best Practices
-                      </h4>
-                      <div className="text-sm whitespace-pre-line text-gray-800">
-                        {currentResult.analysis.bestPractices}
+                      
+                      <Separator />
+                      
+                      {/* Implementation Approach section */}
+                      <div className="p-4">
+                        <div className="flex items-center mb-3 text-emerald-700">
+                          <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                              <line x1="8" y1="21" x2="16" y2="21"/>
+                              <line x1="12" y1="17" x2="12" y2="21"/>
+                            </svg>
+                          </div>
+                          <h4 className="text-base font-semibold">Implementation Approach</h4>
+                        </div>
+                        <div className="pl-11">
+                          <p className="text-sm leading-relaxed text-gray-700">
+                            {currentResult.analysis.implementationApproach}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <Separator />
+                      
+                      {/* Best Practices section */}
+                      <div className="p-4">
+                        <div className="flex items-center mb-3 text-amber-700">
+                          <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center mr-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                              <path d="M2 17l10 5 10-5"/>
+                              <path d="M2 12l10 5 10-5"/>
+                            </svg>
+                          </div>
+                          <h4 className="text-base font-semibold">Best Practices</h4>
+                        </div>
+                        <div className="pl-11 pb-2">
+                          <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-lg border border-amber-200 text-sm leading-relaxed text-gray-700">
+                            {currentResult.analysis.bestPractices}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </Card>
