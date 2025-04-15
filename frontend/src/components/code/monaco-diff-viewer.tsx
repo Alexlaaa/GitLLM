@@ -191,11 +191,7 @@ export function MonacoDiffViewer({
           <FileIcon className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium">{filename}</span>
         </div>
-        <div className="flex items-center space-x-4">
-          {!expanded && (
-            <span className="text-xs font-medium text-blue-800">Original</span>
-          )}
-          <span className="text-xs font-medium text-blue-800">Modified</span>
+        <div className="flex items-center">
           <Button
             variant="ghost"
             size="icon"
