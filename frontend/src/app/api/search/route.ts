@@ -35,8 +35,8 @@ interface GitHubCodeSearchItem {
       avatar_url: string;
       html_url: string;
     };
-    stargazers_count?: number; 
-    forks_count?: number; 
+    stargazers_count?: number;
+    forks_count?: number;
     language: string | null;
   };
 }
@@ -55,13 +55,13 @@ interface GitHubRepoSearchItem {
   forks_count?: number;
   language: string | null;
   score?: number;
-  url: string; 
+  url: string;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const { query } = await request.json();
-    console.log(`[API Route /api/search] Received query: "${query}"`); 
+    console.log(`[API Route /api/search] Received query: "${query}"`);
 
     if (!query || typeof query !== 'string' || query.trim() === '') {
       return NextResponse.json(
@@ -70,7 +70,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({
+      model: process.env.GEMINI_MODEL || '',
+    });
 
     // --- Revamped Prompt ---
     const prompt = `
@@ -149,9 +151,15 @@ export async function POST(request: NextRequest) {
         .replace(/```\n?/g, '')
         .trim();
       parsedResponse = JSON.parse(cleanedText);
-      console.log('[API Route /api/search] Parsed LLM response:', JSON.stringify(parsedResponse, null, 2));
+      console.log(
+        '[API Route /api/search] Parsed LLM response:',
+        JSON.stringify(parsedResponse, null, 2)
+      );
     } catch (parseError) {
-      console.error('[API Route /api/search] Failed to parse LLM response:', text);
+      console.error(
+        '[API Route /api/search] Failed to parse LLM response:',
+        text
+      );
       console.error('[API Route /api/search] Parse error:', parseError);
       return NextResponse.json(
         { error: 'Failed to parse LLM response' },
@@ -162,11 +170,15 @@ export async function POST(request: NextRequest) {
     // --- Use new field names ---
     const searchTarget = parsedResponse.searchPlan.searchTarget;
     const githubQueryString = parsedResponse.searchPlan.githubQueryString;
-    const constructionRationale = parsedResponse.searchPlan.constructionRationale; // For explanation
+    const constructionRationale =
+      parsedResponse.searchPlan.constructionRationale; // For explanation
     const queryAssessment = parsedResponse.searchPlan.queryAssessment; // For feedback/unsupported
 
     if (searchTarget === 'none') {
-       console.log('[API Route /api/search] LLM determined searchTarget is "none". Assessment:', queryAssessment);
+      console.log(
+        '[API Route /api/search] LLM determined searchTarget is "none". Assessment:',
+        queryAssessment
+      );
       return NextResponse.json({
         query: {
           originalQuery: query,
@@ -189,11 +201,16 @@ export async function POST(request: NextRequest) {
         'X-GitHub-Api-Version': '2022-11-28',
       },
     });
-    console.log(`[API Route /api/search] GitHub API response status: ${githubResponse.status}`);
+    console.log(
+      `[API Route /api/search] GitHub API response status: ${githubResponse.status}`
+    );
 
     if (!githubResponse.ok) {
       const errorText = await githubResponse.text();
-      console.error('[API Route /api/search] GitHub API error text:', errorText);
+      console.error(
+        '[API Route /api/search] GitHub API error text:',
+        errorText
+      );
       return NextResponse.json(
         {
           query: {
@@ -211,20 +228,22 @@ export async function POST(request: NextRequest) {
     }
 
     const searchData = await githubResponse.json();
-    console.log(`[API Route /api/search] GitHub API returned ${searchData.items?.length || 0} items.`);
+    console.log(
+      `[API Route /api/search] GitHub API returned ${searchData.items?.length || 0} items.`
+    );
     let finalResults = [];
 
     // --- Keep existing result processing logic ---
     if (searchTarget === 'code' && searchData.items) {
-      const MAX_CONTENT_FETCHES = 10; 
+      const MAX_CONTENT_FETCHES = 10;
       const contentFetchPromises = searchData.items
         .slice(0, MAX_CONTENT_FETCHES)
         .map(async (item: GitHubCodeSearchItem) => {
           try {
-            const contentUrl = item.url; 
+            const contentUrl = item.url;
             const contentResponse = await fetch(contentUrl, {
               headers: {
-                Accept: 'application/vnd.github+json', 
+                Accept: 'application/vnd.github+json',
                 Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
                 'X-GitHub-Api-Version': '2022-11-28',
               },
@@ -233,13 +252,32 @@ export async function POST(request: NextRequest) {
             if (!contentResponse.ok) {
               console.warn(
                 `[API Route /api/search] Failed to fetch content for ${item.path}: ${contentResponse.status}`
-              ); 
-              return { /* ... return item with placeholder ... */ 
-                id: item.sha || item.url, 
-                repository: { name: item.repository.name, full_name: item.repository.full_name, description: item.repository.description, html_url: item.repository.html_url, owner: item.repository.owner.login, stars: item.repository.stargazers_count || 0, forks: item.repository.forks_count || 0, language: item.repository.language, },
-                path: item.path, name: item.name, url: item.url, html_url: item.html_url,
-                codeSnippet: { code: '// Code snippet could not be fetched.', language: item.repository.language || 'plaintext', lineStart: 1, lineEnd: 1, },
-                matchScore: item.score || 0, fullContent: '// Full content could not be fetched.',
+              );
+              return {
+                /* ... return item with placeholder ... */
+                id: item.sha || item.url,
+                repository: {
+                  name: item.repository.name,
+                  full_name: item.repository.full_name,
+                  description: item.repository.description,
+                  html_url: item.repository.html_url,
+                  owner: item.repository.owner.login,
+                  stars: item.repository.stargazers_count || 0,
+                  forks: item.repository.forks_count || 0,
+                  language: item.repository.language,
+                },
+                path: item.path,
+                name: item.name,
+                url: item.url,
+                html_url: item.html_url,
+                codeSnippet: {
+                  code: '// Code snippet could not be fetched.',
+                  language: item.repository.language || 'plaintext',
+                  lineStart: 1,
+                  lineEnd: 1,
+                },
+                matchScore: item.score || 0,
+                fullContent: '// Full content could not be fetched.',
               };
             }
 
@@ -247,46 +285,118 @@ export async function POST(request: NextRequest) {
             let fullContent = '// Content unavailable';
             if (contentData.content && contentData.encoding === 'base64') {
               try {
-                fullContent = Buffer.from(contentData.content,'base64').toString('utf-8');
+                fullContent = Buffer.from(
+                  contentData.content,
+                  'base64'
+                ).toString('utf-8');
               } catch (decodeError) {
-                console.error(`[API Route /api/search] Error decoding Base64 content for ${item.path}:`, decodeError); 
+                console.error(
+                  `[API Route /api/search] Error decoding Base64 content for ${item.path}:`,
+                  decodeError
+                );
                 fullContent = '// Error decoding content';
               }
             } else if (contentData.content) {
               fullContent = contentData.content;
             } else {
-              console.warn(`[API Route /api/search] No 'content' field found or content is null/empty for ${item.path}`); 
+              console.warn(
+                `[API Route /api/search] No 'content' field found or content is null/empty for ${item.path}`
+              );
             }
 
-            const snippetLines = fullContent.split('\n').slice(0, 10).join('\n'); 
-            return { /* ... return item with content ... */ 
-              id: item.sha || item.url, 
-              repository: { name: item.repository.name, full_name: item.repository.full_name, description: item.repository.description, html_url: item.repository.html_url, owner: item.repository.owner.login, stars: item.repository.stargazers_count || 0, forks: item.repository.forks_count || 0, language: item.repository.language, },
-              path: item.path, name: item.name, url: item.url, html_url: item.html_url,
-              codeSnippet: { code: snippetLines || '// Snippet unavailable', language: item.repository.language || 'plaintext', lineStart: 1, lineEnd: snippetLines.split('\n').length, },
-              matchScore: item.score || 0, fullContent: fullContent || '// Content unavailable',
+            const snippetLines = fullContent
+              .split('\n')
+              .slice(0, 10)
+              .join('\n');
+            return {
+              /* ... return item with content ... */ id: item.sha || item.url,
+              repository: {
+                name: item.repository.name,
+                full_name: item.repository.full_name,
+                description: item.repository.description,
+                html_url: item.repository.html_url,
+                owner: item.repository.owner.login,
+                stars: item.repository.stargazers_count || 0,
+                forks: item.repository.forks_count || 0,
+                language: item.repository.language,
+              },
+              path: item.path,
+              name: item.name,
+              url: item.url,
+              html_url: item.html_url,
+              codeSnippet: {
+                code: snippetLines || '// Snippet unavailable',
+                language: item.repository.language || 'plaintext',
+                lineStart: 1,
+                lineEnd: snippetLines.split('\n').length,
+              },
+              matchScore: item.score || 0,
+              fullContent: fullContent || '// Content unavailable',
             };
-          } catch (fetchError: unknown) { /* ... handle fetch error ... */ 
-            const errorMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
-            console.error(`[API Route /api/search] Error fetching content for ${item.path}: ${errorMsg}`);
-            return { /* ... return item with error indication ... */ 
+          } catch (fetchError: unknown) {
+            /* ... handle fetch error ... */
+            const errorMsg =
+              fetchError instanceof Error
+                ? fetchError.message
+                : String(fetchError);
+            console.error(
+              `[API Route /api/search] Error fetching content for ${item.path}: ${errorMsg}`
+            );
+            return {
+              /* ... return item with error indication ... */
               id: item.sha || item.url,
-              repository: { name: item.repository.name, full_name: item.repository.full_name, description: item.repository.description, html_url: item.repository.html_url, owner: item.repository.owner.login, stars: item.repository.stargazers_count || 0, forks: item.repository.forks_count || 0, language: item.repository.language, },
-              path: item.path, name: item.name, url: item.url, html_url: item.html_url,
-              codeSnippet: { code: `// Error fetching snippet: ${errorMsg}`, language: 'plaintext', lineStart: 1, lineEnd: 1, },
-              matchScore: item.score || 0, fullContent: `// Error fetching content: ${errorMsg}`,
+              repository: {
+                name: item.repository.name,
+                full_name: item.repository.full_name,
+                description: item.repository.description,
+                html_url: item.repository.html_url,
+                owner: item.repository.owner.login,
+                stars: item.repository.stargazers_count || 0,
+                forks: item.repository.forks_count || 0,
+                language: item.repository.language,
+              },
+              path: item.path,
+              name: item.name,
+              url: item.url,
+              html_url: item.html_url,
+              codeSnippet: {
+                code: `// Error fetching snippet: ${errorMsg}`,
+                language: 'plaintext',
+                lineStart: 1,
+                lineEnd: 1,
+              },
+              matchScore: item.score || 0,
+              fullContent: `// Error fetching content: ${errorMsg}`,
             };
           }
         });
 
       const remainingItems = searchData.items
         .slice(MAX_CONTENT_FETCHES)
-        .map((item: GitHubCodeSearchItem) => ({ /* ... map remaining items ... */ 
-          id: item.sha || item.url,
-          repository: { name: item.repository.name, full_name: item.repository.full_name, description: item.repository.description, html_url: item.repository.html_url, owner: item.repository.owner.login, stars: item.repository.stargazers_count || 0, forks: item.repository.forks_count || 0, language: item.repository.language, },
-          path: item.path, name: item.name, url: item.url, html_url: item.html_url,
-          codeSnippet: { code: '// Snippet not fetched (limit reached)', language: item.repository.language || 'plaintext', lineStart: 1, lineEnd: 1, },
-          matchScore: item.score || 0, fullContent: '// Content not fetched (limit reached)',
+        .map((item: GitHubCodeSearchItem) => ({
+          /* ... map remaining items ... */ id: item.sha || item.url,
+          repository: {
+            name: item.repository.name,
+            full_name: item.repository.full_name,
+            description: item.repository.description,
+            html_url: item.repository.html_url,
+            owner: item.repository.owner.login,
+            stars: item.repository.stargazers_count || 0,
+            forks: item.repository.forks_count || 0,
+            language: item.repository.language,
+          },
+          path: item.path,
+          name: item.name,
+          url: item.url,
+          html_url: item.html_url,
+          codeSnippet: {
+            code: '// Snippet not fetched (limit reached)',
+            language: item.repository.language || 'plaintext',
+            lineStart: 1,
+            lineEnd: 1,
+          },
+          matchScore: item.score || 0,
+          fullContent: '// Content not fetched (limit reached)',
         }));
 
       finalResults = [
@@ -294,12 +404,25 @@ export async function POST(request: NextRequest) {
         ...remainingItems,
       ];
     } else if (searchTarget === 'repositories' && searchData.items) {
-      finalResults = searchData.items.map((item: GitHubRepoSearchItem) => ({ /* ... map repo items ... */ 
-        id: item.id,
-        repository: { name: item.name, full_name: item.full_name, description: item.description, html_url: item.html_url, owner: item.owner.login, stars: item.stargazers_count || 0, forks: item.forks_count || 0, language: item.language, },
-        path: '', name: item.name, url: item.url, html_url: item.html_url,
-        codeSnippet: { code: '', language: '', lineStart: 0, lineEnd: 0 }, 
-        matchScore: item.score || 0, fullContent: '',
+      finalResults = searchData.items.map((item: GitHubRepoSearchItem) => ({
+        /* ... map repo items ... */ id: item.id,
+        repository: {
+          name: item.name,
+          full_name: item.full_name,
+          description: item.description,
+          html_url: item.html_url,
+          owner: item.owner.login,
+          stars: item.stargazers_count || 0,
+          forks: item.forks_count || 0,
+          language: item.language,
+        },
+        path: '',
+        name: item.name,
+        url: item.url,
+        html_url: item.html_url,
+        codeSnippet: { code: '', language: '', lineStart: 0, lineEnd: 0 },
+        matchScore: item.score || 0,
+        fullContent: '',
       }));
     }
 
@@ -309,13 +432,16 @@ export async function POST(request: NextRequest) {
         transformedQuery: githubQueryString, // Use new name
         explanation: constructionRationale, // Use new name
       },
-      results: finalResults, 
+      results: finalResults,
       endpoint: searchTarget, // Use new name
       queryDetails: parsedResponse.searchPlan, // Use new structure/name
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('[API Route /api/search] Error processing search:', errorMessage);
+    console.error(
+      '[API Route /api/search] Error processing search:',
+      errorMessage
+    );
     return NextResponse.json(
       { error: `Failed to process search request: ${errorMessage}` },
       { status: 500 }

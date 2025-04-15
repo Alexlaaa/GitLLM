@@ -32,9 +32,10 @@ export interface Repository {
 }
 
 export interface AnalysisResult {
-  similarityScore: number;
   insights: string;
-  highlightedDifferences: string[];
+  technicalDetails: string;
+  implementationApproach: string;
+  bestPractices: string;
 }
 
 export interface ComparisonResult {

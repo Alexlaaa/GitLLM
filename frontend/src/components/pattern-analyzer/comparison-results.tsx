@@ -85,12 +85,6 @@ export default function ComparisonResults({
                       {result.path}
                     </p>
                   </div>
-                  <Badge
-                    variant="outline"
-                    className="text-xs font-normal text-gray-800 bg-white border-gray-300"
-                  >
-                    {result.analysis.similarityScore}% match
-                  </Badge>
                 </div>
 
                 <div className="mt-3 flex items-center text-sm space-x-4">
@@ -151,12 +145,6 @@ export default function ComparisonResults({
                   >
                     {currentResult.repository.language || 'Unknown'}
                   </Badge>
-                  <Badge
-                    variant="outline"
-                    className="font-normal text-gray-800 bg-white border-gray-300"
-                  >
-                    {currentResult.analysis.similarityScore}% Similar
-                  </Badge>
                 </div>
               </div>
 
@@ -181,48 +169,40 @@ export default function ComparisonResults({
                 </TabsContent>
 
                 <TabsContent value="insights" className="mt-0">
-                  <Card className="p-4 bg-gray-50">
-                    <div className="mb-4">
-                      <h4 className="font-semibold text-base">Analysis</h4>
-                      <p className="text-sm whitespace-pre-line mt-2">
+                  <Card className="p-6 bg-gray-50 text-gray-800">
+                    <div className="mb-6">
+                      <h4 className="font-semibold text-base text-gray-900 mb-2">Overview</h4>
+                      <p className="text-sm whitespace-pre-line text-gray-800">
                         {currentResult.analysis.insights}
                       </p>
                     </div>
 
-                    <Separator className="my-4" />
+                    <Separator className="my-5" />
 
-                    <div>
-                      <h4 className="font-semibold text-base">
-                        Key Differences
+                    <div className="mb-6">
+                      <h4 className="font-semibold text-base text-gray-900 mb-2">
+                        Technical Details
                       </h4>
-                      <ul className="mt-2 text-sm space-y-2">
-                        {currentResult.analysis.highlightedDifferences.map(
-                          (diff, index) => (
-                            <li key={index} className="flex">
-                              <FileCode className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-primary" />
-                              <span>{diff}</span>
-                            </li>
-                          )
-                        )}
-                      </ul>
+                      <div className="text-sm whitespace-pre-line text-gray-800 bg-white p-4 rounded-md border border-gray-200">
+                        {currentResult.analysis.technicalDetails}
+                      </div>
                     </div>
 
-                    <div className="mt-6 bg-blue-50 dark:bg-blue-950 p-4 rounded-md">
-                      <h4 className="font-semibold text-base">
-                        Implementation Quality
+                    <div className="mb-6">
+                      <h4 className="font-semibold text-base text-gray-900 mb-2">
+                        Implementation Approach
                       </h4>
-                      <div className="flex items-center mt-2">
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                          <div
-                            className="bg-primary h-2.5 rounded-full"
-                            style={{
-                              width: `${currentResult.analysis.similarityScore}%`,
-                            }}
-                          ></div>
-                        </div>
-                        <span className="ml-2 text-sm font-medium">
-                          {currentResult.analysis.similarityScore}%
-                        </span>
+                      <div className="text-sm whitespace-pre-line text-gray-800">
+                        {currentResult.analysis.implementationApproach}
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 p-5 rounded-md border border-blue-100">
+                      <h4 className="font-semibold text-base text-gray-900 mb-2">
+                        Best Practices
+                      </h4>
+                      <div className="text-sm whitespace-pre-line text-gray-800">
+                        {currentResult.analysis.bestPractices}
                       </div>
                     </div>
                   </Card>

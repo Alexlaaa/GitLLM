@@ -1,13 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Initialize Gemini API
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_LLM_API_KEY || "");
+// Initialize Gemini API with the correct model version
+// Note: For latest API version, model is now "gemini-1.0-pro" instead of "gemini-pro"
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_LLM_API_KEY || '');
 
 interface PatternAnalysisResult {
-  similarityScore: number;
   insights: string;
-  highlightedDifferences: string[];
+  technicalDetails: string;
+  implementationApproach: string;
+  bestPractices: string;
 }
 
 interface GitHubCodeSearchItem {
@@ -20,14 +22,17 @@ interface GitHubCodeSearchItem {
   };
 }
 
-
 export async function POST(request: NextRequest) {
   try {
     const { codePattern, language, filters } = await request.json();
 
-    if (!codePattern || typeof codePattern !== "string" || codePattern.trim() === "") {
+    if (
+      !codePattern ||
+      typeof codePattern !== 'string' ||
+      codePattern.trim() === ''
+    ) {
       return NextResponse.json(
-        { error: "Code pattern is required and must be a non-empty string" },
+        { error: 'Code pattern is required and must be a non-empty string' },
         { status: 400 }
       );
     }
@@ -35,11 +40,11 @@ export async function POST(request: NextRequest) {
     // Construct GitHub search query for code pattern
     // We need to find similar patterns while limiting to specific language if provided
     let searchQuery = `${codePattern.substring(0, 200)}`; // Using first 200 chars as GitHub limits query length
-    
+
     if (language) {
       searchQuery += ` language:${language}`;
     }
-    
+
     // Add any additional filters
     if (filters) {
       if (filters.stars) {
@@ -58,18 +63,18 @@ export async function POST(request: NextRequest) {
 
     // Execute GitHub search for code patterns
     const githubApiUrl = `https://api.github.com/search/code?q=${encodeURIComponent(searchQuery)}`;
-    
+
     const githubResponse = await fetch(githubApiUrl, {
       headers: {
-        Accept: "application/vnd.github+json",
+        Accept: 'application/vnd.github+json',
         Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-        "X-GitHub-Api-Version": "2022-11-28",
+        'X-GitHub-Api-Version': '2022-11-28',
       },
     });
 
     if (!githubResponse.ok) {
       const errorText = await githubResponse.text();
-      console.error("GitHub API error:", errorText);
+      console.error('GitHub API error:', errorText);
       return NextResponse.json(
         { error: `GitHub API error: ${githubResponse.status}` },
         { status: githubResponse.status }
@@ -84,13 +89,13 @@ export async function POST(request: NextRequest) {
       items.slice(0, 5).map(async (item: GitHubCodeSearchItem) => {
         // Get full content URL
         const contentUrl = item.url;
-        
+
         try {
           const contentResponse = await fetch(contentUrl, {
             headers: {
-              Accept: "application/vnd.github+json",
+              Accept: 'application/vnd.github+json',
               Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-              "X-GitHub-Api-Version": "2022-11-28",
+              'X-GitHub-Api-Version': '2022-11-28',
             },
           });
 
@@ -100,26 +105,29 @@ export async function POST(request: NextRequest) {
           }
 
           const contentData = await contentResponse.json();
-          
+
           // GitHub API returns content as base64 encoded
-          const content = contentData.content 
+          const content = contentData.content
             ? Buffer.from(contentData.content, 'base64').toString('utf-8')
-            : "";
+            : '';
 
           // Get repository details
           const repoUrl = item.repository.url;
           const repoResponse = await fetch(repoUrl, {
             headers: {
-              Accept: "application/vnd.github+json",
+              Accept: 'application/vnd.github+json',
               Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-              "X-GitHub-Api-Version": "2022-11-28",
+              'X-GitHub-Api-Version': '2022-11-28',
             },
           });
 
           const repoData = await repoResponse.json();
 
           // Use LLM to analyze the code pattern differences
-          const analysisResult = await analyzeCodePatterns(codePattern, content);
+          const analysisResult = await analyzeCodePatterns(
+            codePattern,
+            content
+          );
 
           return {
             score: item.score,
@@ -153,7 +161,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Error analyzing pattern:", errorMessage);
+    console.error('Error analyzing pattern:', errorMessage);
     return NextResponse.json(
       { error: `Failed to analyze code pattern: ${errorMessage}` },
       { status: 500 }
@@ -166,50 +174,67 @@ async function analyzeCodePatterns(
   sourceCode: string,
   targetCode: string
 ): Promise<PatternAnalysisResult> {
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const model = genAI.getGenerativeModel({
+    model: process.env.GEMINI_MODEL || '',
+  });
 
   // Create prompt for LLM
   const prompt = `
-  As a code analysis expert, compare these two code snippets and provide insights:
+  As a senior code analyst, analyze these code snippets in detail and provide comprehensive insights:
 
-  SOURCE CODE:
+  SOURCE CODE (User's Code):
   \`\`\`
   ${sourceCode}
   \`\`\`
 
-  TARGET CODE:
+  TARGET CODE (GitHub Implementation):
   \`\`\`
   ${targetCode}
   \`\`\`
 
-  1. Provide a similarity score from 0-100
-  2. Analyze key differences in implementation approach
-  3. Identify any best practices present in either snippet
-  4. Note any potential issues or improvements
-  5. List the specific differences in a concise way
+  Perform a deep professional analysis of the above code samples. Your analysis should be thorough, technically precise, and educational.
 
-  Return your analysis in the following JSON format with no additional text:
+  IMPORTANT: You must return your response as a raw JSON object without ANY markdown formatting, code blocks, or additional text.
+  DO NOT use \`\`\`json or any other markdown formatting in your response.
+  Return ONLY the JSON object itself starting with { and ending with } and nothing else.
+
+  Your response should follow this structure:
   {
-    "similarityScore": number,
-    "insights": "Your detailed analysis here describing differences in implementation approach, best practices, and potential improvements",
-    "highlightedDifferences": ["Specific difference 1", "Specific difference 2", ...]
+    "insights": "Give a high-level overview of what this code does, its purpose, and key functionality. Explain the pattern demonstrated and how both implementations approach the same problem. Include any notable differences in philosophy or design approach.",
+    
+    "technicalDetails": "Provide specific technical details about how the target implementation works. Explain algorithms, data structures, language features, and techniques being used. Be specific and educational.",
+    
+    "implementationApproach": "Compare the implementation approaches between source and target code. What patterns, techniques, or paradigms does each use? What are the tradeoffs? Would certain approaches work better in different contexts?",
+    
+    "bestPractices": "Highlight best practices demonstrated in the target code. Note any performance optimizations, security considerations, maintainability improvements, or other quality aspects. Suggest what the user could learn from this implementation."
   }
   `;
 
   try {
     const result = await model.generateContent(prompt);
     const response = result.response;
-    const text = response.text();
-    
-    // Parse the JSON response
+    let text = response.text();
+
+    // Sanitize the response text to remove any potential markdown formatting
+    // Remove markdown code block indicators if present
+    text = text.replace(/```json\s*/g, '');
+    text = text.replace(/```\s*$/g, '');
+    // Trim whitespace to ensure clean JSON
+    text = text.trim();
+
+    console.log('Processing response:', text.substring(0, 100) + '...'); // Log beginning of response
+
+    // Parse the sanitized JSON response
     const analysisResult = JSON.parse(text) as PatternAnalysisResult;
     return analysisResult;
   } catch (error) {
-    console.error("Error analyzing code patterns:", error);
+    console.error('Error analyzing code patterns:', error);
     return {
-      similarityScore: 0,
-      insights: "Failed to analyze code patterns",
-      highlightedDifferences: ["Analysis failed"],
+      insights: 'Failed to analyze code patterns',
+      technicalDetails:
+        'Analysis could not be completed due to a technical error.',
+      implementationApproach: 'Unable to compare implementations at this time.',
+      bestPractices: 'Analysis was not successful, please try again.',
     };
   }
 }
