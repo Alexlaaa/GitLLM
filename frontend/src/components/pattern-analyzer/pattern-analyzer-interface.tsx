@@ -36,6 +36,7 @@ export interface AnalysisResult {
   technicalAnalysis: string;
   bestPractices: string;
   improvementAreas: string;
+  overallScore: number; // 1-100 score for implementation quality
 }
 
 export interface ComparisonResult {

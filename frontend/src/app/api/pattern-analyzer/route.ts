@@ -10,6 +10,7 @@ interface PatternAnalysisResult {
   technicalAnalysis: string;
   bestPractices: string;
   improvementAreas: string;
+  overallScore: number; // 1-100 score for implementation quality
 }
 
 interface GitHubCodeSearchItem {
@@ -84,9 +85,12 @@ export async function POST(request: NextRequest) {
     const searchResults = await githubResponse.json();
     const items = searchResults.items || [];
 
+    // Increase limit to 10 results (was 5)
+    const MAX_RESULTS = 10;
+    
     // For each result, fetch the full file content to perform analysis
     const fullResults = await Promise.all(
-      items.slice(0, 5).map(async (item: GitHubCodeSearchItem) => {
+      items.slice(0, MAX_RESULTS).map(async (item: GitHubCodeSearchItem) => {
         // Get full content URL
         const contentUrl = item.url;
 
@@ -206,7 +210,9 @@ async function analyzeCodePatterns(
     
     "bestPractices": "Highlight best practices demonstrated in the target code. Note any performance optimizations, security considerations, maintainability improvements, or other quality aspects. Suggest what the user could learn from this implementation. If there are no notable best practices, it's okay to mention that.",
     
-    "improvementAreas": "Identify potential issues, anti-patterns, or areas that could be improved in the target code. Consider performance concerns, edge cases, security vulnerabilities, or maintainability issues. Provide specific suggestions for improvement where possible. If there are no obvious areas for improvement, it's perfectly fine to state that the implementation is solid and doesn't have clear issues to address."
+    "improvementAreas": "Identify potential issues, anti-patterns, or areas that could be improved in the target code. Consider performance concerns, edge cases, security vulnerabilities, or maintainability issues. Provide specific suggestions for improvement where possible. If there are no obvious areas for improvement, it's perfectly fine to state that the implementation is solid and doesn't have clear issues to address.",
+    
+    "overallScore": Give a numerical score from 1-100 that represents the overall quality of this implementation compared to the user's code pattern. Consider code quality, best practices, efficiency, maintainability, and how well it solves the intended problem. Higher scores (80-100) indicate exceptional implementations, medium scores (50-79) indicate solid implementations with some room for improvement, and lower scores (below 50) indicate implementations with significant issues or that poorly match the intended use case.
   }
   `;
 
@@ -233,8 +239,8 @@ async function analyzeCodePatterns(
       insights: 'Failed to analyze code patterns',
       technicalAnalysis: 'Analysis could not be completed due to a technical error. Unable to compare implementations at this time.',
       bestPractices: 'Analysis was not successful, please try again.',
-      improvementAreas:
-        'Could not identify improvement areas due to analysis failure.',
+      improvementAreas: 'Could not identify improvement areas due to analysis failure.',
+      overallScore: 0, // Default score for failed analysis
     };
   }
 }

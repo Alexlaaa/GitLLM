@@ -58,7 +58,7 @@ export default function ComparisonResults({
           Similar Implementations
         </h3>
 
-        <ScrollArea className="pr-3 mb-2 h-[900px]">
+        <ScrollArea className="pr-3 mb-2 h-[1050px]">
           <div className="space-y-4">
             {results.map((result) => (
               <Card
@@ -72,12 +72,25 @@ export default function ComparisonResults({
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <h4
-                      className="font-medium text-base truncate"
-                      title={result.name}
-                    >
-                      {result.name}
-                    </h4>
+                    <div className="flex items-center gap-2">
+                      <h4
+                        className="font-medium text-base truncate"
+                        title={result.name}
+                      >
+                        {result.name}
+                      </h4>
+                      <Badge
+                        className={`${
+                          result.analysis.overallScore >= 80
+                            ? 'bg-green-500'
+                            : result.analysis.overallScore >= 50
+                            ? 'bg-amber-500'
+                            : 'bg-red-500'
+                        } text-white`}
+                      >
+                        {result.analysis.overallScore}/100
+                      </Badge>
+                    </div>
                     <p
                       className="text-sm text-gray-500 truncate"
                       title={result.path}
@@ -139,12 +152,25 @@ export default function ComparisonResults({
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Badge
-                    variant="outline"
-                    className="font-normal text-gray-800 bg-white"
-                  >
-                    {currentResult.repository.language || 'Unknown'}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className="font-normal text-gray-800 bg-white"
+                    >
+                      {currentResult.repository.language || 'Unknown'}
+                    </Badge>
+                    <Badge
+                      className={`${
+                        currentResult.analysis.overallScore >= 80
+                          ? 'bg-green-500'
+                          : currentResult.analysis.overallScore >= 50
+                          ? 'bg-amber-500'
+                          : 'bg-red-500'
+                      } text-white`}
+                    >
+                      Quality Score: {currentResult.analysis.overallScore}/100
+                    </Badge>
+                  </div>
                 </div>
               </div>
 
