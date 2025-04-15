@@ -175,11 +175,23 @@ export default function ComparisonResults({
               </div>
 
               <Tabs defaultValue="comparison">
-                <TabsList className="mb-4 bg-gray-100">
-                  <TabsTrigger value="comparison">
+                <TabsList className="grid grid-cols-2 mb-4 bg-white p-0 bg-transparent shadow-none">
+                  <TabsTrigger 
+                    className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-800 font-medium py-3 transition-all flex items-center justify-center" 
+                    value="comparison"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3h6m-6 18h6m-11-9h16M9 3v18m6-18v18" />
+                    </svg>
                     Side-by-Side Comparison
                   </TabsTrigger>
-                  <TabsTrigger value="insights">
+                  <TabsTrigger 
+                    className="data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=inactive]:bg-gray-100 data-[state=inactive]:text-gray-800 font-medium py-3 transition-all flex items-center justify-center" 
+                    value="insights"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
                     Implementation Insights
                   </TabsTrigger>
                 </TabsList>
