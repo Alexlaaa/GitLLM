@@ -81,26 +81,29 @@ export function MonacoDiffViewer({
       fontFamily: "'Geist Mono', monospace, Consolas, 'Courier New', monospace",
     });
     
-    // Set the theme
-    monaco.editor.setTheme(isDarkTheme ? "vs-dark" : "vs-light");
+    // Always use light theme for consistency
+    monaco.editor.setTheme("vs-light");
     
-    // Create left editor
+    // Create editors if they don't exist
     if (!leftEditorInstanceRef.current) {
-      const leftModel = monaco.editor.createModel(originalCode || "// No original code", language);
       leftEditorInstanceRef.current = monaco.editor.create(leftEditorRef.current, {
         ...options,
-        model: leftModel,
+        value: originalCode || "// No original code",
+        language: language,
       });
     }
     
-    // Create right editor
     if (!rightEditorInstanceRef.current) {
-      const rightModel = monaco.editor.createModel(modifiedCode || "// No modified code", language);
       rightEditorInstanceRef.current = monaco.editor.create(rightEditorRef.current, {
         ...options,
-        model: rightModel,
+        value: modifiedCode || "// No modified code",
+        language: language,
       });
     }
+    
+    // Update the editor contents when props change
+    leftEditorInstanceRef.current.setValue(originalCode || "// No original code");
+    rightEditorInstanceRef.current.setValue(modifiedCode || "// No modified code");
     
     // Synchronize scrolling between editors
     const syncScrolling = () => {
