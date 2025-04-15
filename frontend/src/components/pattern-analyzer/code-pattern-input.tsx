@@ -78,13 +78,15 @@ export default function CodePatternInput({
           <Card className="p-6 pb-5 bg-white border">
             {' '}
             {/* Added light background */}
-            <h2 className="text-xl font-semibold mb-4 text-gray-900">Code Pattern</h2>
+            <h2 className="text-xl font-semibold mb-4 text-gray-900">
+              Code Pattern
+            </h2>
             <p className="text-gray-500 mb-4">
               Enter a code pattern or snippet to find similar implementations
               across GitHub repositories
             </p>
             {/* Increased bottom margin to prevent overlap */}
-            <div className="mb-8 h-[300px] border rounded-md">
+            <div className="mb-8 h-[300px]">
               <MonacoEditor
                 value={code}
                 onChange={setCode}
@@ -115,7 +117,9 @@ export default function CodePatternInput({
         </div>
 
         <Card className="p-6 bg-white border">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900">Search Refinement</h2>
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">
+            Search Refinement
+          </h2>
 
           <Collapsible open={showFilters} onOpenChange={setShowFilters}>
             <CollapsibleTrigger className="flex items-center justify-between w-full text-left font-medium mb-4">
