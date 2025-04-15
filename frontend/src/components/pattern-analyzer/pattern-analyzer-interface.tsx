@@ -36,6 +36,7 @@ export interface AnalysisResult {
   technicalDetails: string;
   implementationApproach: string;
   bestPractices: string;
+  improvementAreas: string;
 }
 
 export interface ComparisonResult {

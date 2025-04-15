@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Initialize Gemini API with the correct model version
-// Note: For latest API version, model is now "gemini-1.0-pro" instead of "gemini-pro"
+// Initialize Gemini API
+// Using the stable "gemini-pro" model for code analysis
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_LLM_API_KEY || '');
 
 interface PatternAnalysisResult {
@@ -10,6 +10,7 @@ interface PatternAnalysisResult {
   technicalDetails: string;
   implementationApproach: string;
   bestPractices: string;
+  improvementAreas: string;
 }
 
 interface GitHubCodeSearchItem {
@@ -206,7 +207,9 @@ async function analyzeCodePatterns(
     
     "implementationApproach": "Compare the implementation approaches between source and target code. What patterns, techniques, or paradigms does each use? What are the tradeoffs? Would certain approaches work better in different contexts?",
     
-    "bestPractices": "Highlight best practices demonstrated in the target code. Note any performance optimizations, security considerations, maintainability improvements, or other quality aspects. Suggest what the user could learn from this implementation."
+    "bestPractices": "Highlight best practices demonstrated in the target code. Note any performance optimizations, security considerations, maintainability improvements, or other quality aspects. Suggest what the user could learn from this implementation. If there are no notable best practices, it's okay to mention that.",
+    
+    "improvementAreas": "Identify potential issues, anti-patterns, or areas that could be improved in the target code. Consider performance concerns, edge cases, security vulnerabilities, or maintainability issues. Provide specific suggestions for improvement where possible. If there are no obvious areas for improvement, it's perfectly fine to state that the implementation is solid and doesn't have clear issues to address."
   }
   `;
 
@@ -235,6 +238,8 @@ async function analyzeCodePatterns(
         'Analysis could not be completed due to a technical error.',
       implementationApproach: 'Unable to compare implementations at this time.',
       bestPractices: 'Analysis was not successful, please try again.',
+      improvementAreas:
+        'Could not identify improvement areas due to analysis failure.',
     };
   }
 }
