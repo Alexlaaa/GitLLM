@@ -132,7 +132,7 @@ export default function CodePatternInput({
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-gray-800">
                   Minimum Stars
                 </label>
                 <Input
@@ -143,7 +143,7 @@ export default function CodePatternInput({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-gray-800">
                   Minimum Forks
                 </label>
                 <Input
@@ -154,7 +154,7 @@ export default function CodePatternInput({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-gray-800">
                   Repository Filter
                 </label>
                 <Input
@@ -164,7 +164,7 @@ export default function CodePatternInput({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-gray-800">
                   User/Organization
                 </label>
                 <Input

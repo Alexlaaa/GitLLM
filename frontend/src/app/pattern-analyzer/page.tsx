@@ -23,10 +23,10 @@ export default function PatternAnalyzerPage() {
       <div className="min-h-screen bg-slate-50 py-16">
         <div className="container mx-auto px-4 max-w-none">
           <div className="w-full mx-auto mb-10">
-            <h1 className="text-4xl font-semibold text-gray-900 mb-4">
+            <h1 className="text-4xl font-semibold text-gray-900 mb-4 text-center">
               Code Pattern Analyzer
             </h1>
-            <p className="text-lg text-gray-600 mb-8">
+            <p className="text-lg text-gray-600 mb-8 text-center">
               Search for similar code implementations across GitHub repositories
               and analyze differences
             </p>
