@@ -158,7 +158,7 @@ export default function ComparisonResults({
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="comparison" className="mt-0">
+                <TabsContent value="comparison" className="mt-0 h-[850px]">
                   <MonacoDiffViewer
                     originalCode={originalCode}
                     modifiedCode={currentResult.codeContent}
@@ -168,7 +168,10 @@ export default function ComparisonResults({
                   />
                 </TabsContent>
 
-                <TabsContent value="insights" className="mt-0">
+                <TabsContent
+                  value="insights"
+                  className="mt-0 h-[850px] overflow-auto"
+                >
                   <Card className="p-0 overflow-hidden rounded-lg shadow-sm bg-white">
                     {/* Code analysis header */}
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4">

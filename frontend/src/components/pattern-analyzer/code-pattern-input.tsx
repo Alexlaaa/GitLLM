@@ -75,7 +75,7 @@ export default function CodePatternInput({
     <div className="space-y-6 text-gray-800">
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
-          <Card className="p-6 pb-5 bg-white border">
+          <Card className="p-6 pb-5 bg-white border h-[700px] flex flex-col">
             {' '}
             {/* Added light background */}
             <h2 className="text-xl font-semibold mb-4 text-gray-900">
@@ -85,13 +85,13 @@ export default function CodePatternInput({
               Enter a code pattern or snippet to find similar implementations
               across GitHub repositories
             </p>
-            {/* Increased bottom margin to prevent overlap */}
-            <div className="mb-8 h-[300px]">
+            {/* Increased height for better code input */}
+            <div className="mb-8 h-[550px]">
               <MonacoEditor
                 value={code}
                 onChange={setCode}
                 language={language || 'javascript'}
-                height="250px"
+                height="500px"
               />
             </div>
             {/* Added top margin to prevent overlap */}
@@ -116,7 +116,7 @@ export default function CodePatternInput({
           </Card>
         </div>
 
-        <Card className="p-6 bg-white border">
+        <Card className="p-6 bg-white border h-[700px] flex flex-col">
           <h2 className="text-xl font-semibold mb-4 text-gray-900">
             Search Refinement
           </h2>
