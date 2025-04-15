@@ -3,13 +3,13 @@
 import React, { useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { LucideIcon } from "lucide-react"
+import { Circle, Search, Cog, FileCode, Settings, LayoutGrid } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface NavItem {
   name: string
   url: string
-  icon: LucideIcon
+  iconName: string
 }
 
 interface NavBarProps {
@@ -20,6 +20,27 @@ interface NavBarProps {
 export function NavBar({ items, className }: NavBarProps) {
   const [activeTab, setActiveTab] = useState(items[0].name)
 
+  // Helper function to render icons by name
+  const renderIcon = (iconName: string) => {
+    // Map icon names to components
+    switch (iconName.toLowerCase()) {
+      case 'search':
+        return <Search size={18} strokeWidth={2.5} />;
+      case 'cog':
+        return <Cog size={18} strokeWidth={2.5} />;
+      case 'file-code':
+      case 'filecode':
+        return <FileCode size={18} strokeWidth={2.5} />;
+      case 'settings':
+        return <Settings size={18} strokeWidth={2.5} />;
+      case 'layout':
+      case 'grid':
+        return <LayoutGrid size={18} strokeWidth={2.5} />;
+      default:
+        return <Circle size={18} strokeWidth={2.5} />;
+    }
+  };
+
   return (
     <div
       className={cn(
@@ -29,7 +50,6 @@ export function NavBar({ items, className }: NavBarProps) {
     >
       <div className="flex items-center gap-3 bg-background/5 border border-border backdrop-blur-lg py-1 px-1 rounded-full shadow-lg">
         {items.map((item) => {
-          const Icon = item.icon
           const isActive = activeTab === item.name
 
           return (
@@ -45,7 +65,7 @@ export function NavBar({ items, className }: NavBarProps) {
             >
               <span className="hidden md:inline">{item.name}</span>
               <span className="md:hidden">
-                <Icon size={18} strokeWidth={2.5} />
+                {renderIcon(item.iconName)}
               </span>
               {isActive && (
                 <motion.div

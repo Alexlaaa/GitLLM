@@ -1,15 +1,13 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
-import * as monaco from "monaco-editor";
-import { useTheme } from "next-themes";
+import React, { useRef, useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, Check, FileIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useTheme } from "next-themes";
 
-interface MonacoCodeBlockProps {
+export interface MonacoCodeBlockProps {
   code: string;
   language?: string;
   className?: string;
@@ -26,12 +24,31 @@ export function MonacoCodeBlock({
   showLineNumbers = true,
   title,
 }: MonacoCodeBlockProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  // Use more specific types instead of any
+  const [monaco, setMonaco] = useState<typeof import('monaco-editor') | null>(null);
+  const [editor, setEditor] = useState<import('monaco-editor').editor.IStandaloneCodeEditor | null>(null);
   const [copied, setCopied] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   const isDarkTheme = theme === "dark";
-  
+
+  // Handle client-side only code
+  useEffect(() => {
+    setIsMounted(true);
+    // Dynamically import Monaco Editor only on client side
+    const loadMonaco = async () => {
+      try {
+        const monacoModule = await import('monaco-editor');
+        setMonaco(monacoModule);
+      } catch (err) {
+        console.error("Failed to load Monaco:", err);
+      }
+    };
+    
+    loadMonaco();
+  }, []);
+
   // Calculate dynamic height based on content
   const calculateHeight = () => {
     const lineCount = code.split('\n').length;
@@ -44,22 +61,22 @@ export function MonacoCodeBlock({
 
   // Set up Monaco editor
   useEffect(() => {
-    if (!containerRef.current) return;
-
+    if (!monaco || !containerRef.current || !isMounted) return;
+    
     // Configure editor options
-    const options: monaco.editor.IStandaloneEditorConstructionOptions = {
+    const options: import('monaco-editor').editor.IStandaloneEditorConstructionOptions = {
       value: code,
       language,
       readOnly: true,
       minimap: { enabled: false },
       scrollBeyondLastLine: false,
-      lineNumbers: showLineNumbers ? "on" : "off",
-      renderLineHighlight: "all",
+      lineNumbers: showLineNumbers ? 'on' as const : 'off' as const,
+      renderLineHighlight: 'all',
       scrollbar: {
         vertical: 'auto',
         horizontal: 'auto',
       },
-      theme: isDarkTheme ? "vs-dark" : "vs-light",
+      theme: isDarkTheme ? 'vs-dark' : 'vs-light',
       fontSize: 14,
       fontFamily: "'Geist Mono', monospace",
       automaticLayout: true,
@@ -70,20 +87,30 @@ export function MonacoCodeBlock({
       }
     };
 
-    // Create editor
-    const editor = monaco.editor.create(containerRef.current, options);
-    editorRef.current = editor;
-
-    // Clean up on unmount
+    try {
+      // Clean up previous instance if it exists
+      if (editor) {
+        editor.dispose();
+      }
+      
+      // Create editor
+      const newEditor = monaco.editor.create(containerRef.current, options);
+      setEditor(newEditor);
+    } catch (err) {
+      console.error("Error creating Monaco editor:", err);
+    }
+    
     return () => {
-      editor.dispose();
+      if (editor) editor.dispose();
     };
-  }, [code, language, showLineNumbers, isDarkTheme]);
+  }, [monaco, isMounted, code, language, showLineNumbers, isDarkTheme]); // Removed 'editor' from dependencies
 
   // Update theme when it changes
   useEffect(() => {
-    monaco.editor.setTheme(isDarkTheme ? "vs-dark" : "vs-light");
-  }, [isDarkTheme]);
+    if (monaco?.editor) {
+      monaco.editor.setTheme(isDarkTheme ? "vs-dark" : "vs-light");
+    }
+  }, [isDarkTheme, monaco]);
 
   // Copy code to clipboard
   const copyToClipboard = () => {
@@ -91,6 +118,32 @@ export function MonacoCodeBlock({
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  // If we're in SSR or haven't loaded Monaco yet, return a placeholder
+  if (!isMounted) {
+    return (
+      <Card className={cn("border border-border overflow-hidden", className)}>
+        <div className="flex items-center justify-between bg-accent p-2 border-b border-border">
+          <div className="flex items-center space-x-2">
+            <FileIcon className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">{title || language}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm" className="h-7 px-2 text-xs" disabled>
+              <Copy className="h-3.5 w-3.5 mr-1" />
+              Copy
+            </Button>
+          </div>
+        </div>
+        <div style={{ height: dynamicHeight }} className="w-full bg-muted/20">
+          <pre className="p-4 text-xs opacity-50 font-mono overflow-x-auto">
+            {code.substring(0, 100)}
+            {code.length > 100 ? '...' : ''}
+          </pre>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className={cn("border border-border overflow-hidden", className)}>
