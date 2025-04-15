@@ -81,8 +81,8 @@ export function MonacoDiffViewer({
       fontFamily: "'Geist Mono', monospace, Consolas, 'Courier New', monospace",
     });
     
-    // Always use light theme for consistency
-    monaco.editor.setTheme("vs-light");
+    // Always use dark theme for consistency
+    monaco.editor.setTheme("vs-dark");
     
     // Create editors if they don't exist
     if (!leftEditorInstanceRef.current) {

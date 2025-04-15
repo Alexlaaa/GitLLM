@@ -84,7 +84,7 @@ export function MonacoEditor({
         value: initialValue,
         language: selectedLanguage,
         readOnly,
-        theme: isDarkTheme ? "vs-dark" : "vs-light",
+        theme: "vs-dark",
         roundedSelection: true,
         automaticLayout: false, // Keep disabled for now
       });
@@ -99,8 +99,8 @@ export function MonacoEditor({
           onChange?.(currentValue);
         });
 
-        // Initial theme set
-        monacoInstance.editor.setTheme(isDarkTheme ? "vs-dark" : "vs-light");
+        // Initial theme set to dark
+        monacoInstance.editor.setTheme("vs-dark");
 
         // Cleanup function for this effect (disposes editor and listener)
         return () => {
@@ -151,12 +151,12 @@ export function MonacoEditor({
     }
   }, [monacoInstance, selectedLanguage]);
 
-  // Effect to update editor theme when isDarkTheme changes
+  // Always use dark theme for consistency
   useEffect(() => {
     if (monacoInstance && monacoEditorRef.current) {
-      monacoInstance.editor.setTheme(isDarkTheme ? "vs-dark" : "vs-light");
+      monacoInstance.editor.setTheme("vs-dark");
     }
-  }, [monacoInstance, isDarkTheme]);
+  }, [monacoInstance]);
 
   // Effect to update readOnly status
   useEffect(() => {
