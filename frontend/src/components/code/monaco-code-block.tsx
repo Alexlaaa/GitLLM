@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, Check, FileIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useTheme } from "next-themes";
+// Removed useTheme import and duplicate imports
 
 export interface MonacoCodeBlockProps {
   code: string;
@@ -30,8 +30,7 @@ export function MonacoCodeBlock({
   const [editor, setEditor] = useState<import('monaco-editor').editor.IStandaloneCodeEditor | null>(null);
   const [copied, setCopied] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const { theme } = useTheme();
-  const isDarkTheme = theme === "dark";
+  // Removed theme-related state
 
   // Handle client-side only code
   useEffect(() => {
@@ -99,13 +98,13 @@ export function MonacoCodeBlock({
       lineNumbers: showLineNumbers ? 'on' as const : 'off' as const,
       renderLineHighlight: 'all',
       scrollbar: {
-        vertical: 'auto',
-        horizontal: 'auto',
-      },
-      theme: isDarkTheme ? 'vs-dark' : 'vs-light',
-      fontSize: 14,
-      fontFamily: "'Geist Mono', monospace",
-      automaticLayout: true,
+       vertical: 'auto',
+       horizontal: 'auto',
+     },
+     theme: 'vs-light', // Force light theme
+     fontSize: 14,
+     fontFamily: "'Geist Mono', monospace",
+     automaticLayout: true,
       contextmenu: false,
       folding: true,
       guides: {
@@ -127,19 +126,13 @@ export function MonacoCodeBlock({
     }
     
     return () => {
-      if (editor) editor.dispose();
+     if (editor) editor.dispose();
     };
-    // Ensure editor is disposed on component unmount or when dependencies change significantly
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [monaco, isMounted, code, language, showLineNumbers, isDarkTheme, dynamicHeight]); // Added dynamicHeight dependency
+  // Ensure editor is disposed on component unmount or when dependencies change significantly
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [monaco, isMounted, code, language, showLineNumbers, dynamicHeight]); // Removed isDarkTheme dependency and fixed trailing comma/syntax
 
-  // Update theme when it changes
-  useEffect(() => {
-    if (monaco?.editor) {
-      monaco.editor.setTheme(isDarkTheme ? "vs-dark" : "vs-light");
-    }
-  }, [isDarkTheme, monaco]);
-
+  // Removed theme update useEffect
   // Copy code to clipboard
   const copyToClipboard = () => {
     navigator.clipboard.writeText(code);

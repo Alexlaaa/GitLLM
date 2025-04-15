@@ -52,7 +52,7 @@ const SearchBar = ({
           <Input
             id={id}
             ref={inputRef}
-            className="peer pr-9 pl-9 h-10"
+            className="peer pr-9 pl-9 h-10 text-gray-900" // Added text-gray-900 for visibility
             placeholder={placeholder}
             type="search"
             value={query}
@@ -72,16 +72,7 @@ const SearchBar = ({
               <Search size={16} strokeWidth={2} aria-hidden="true" />
             )}
           </div>
-          {query && (
-            <button
-              className="absolute inset-y-0 end-0 flex h-full w-9 items-center justify-center rounded-e-lg text-muted-foreground/80 outline-offset-2 transition-colors hover:text-foreground focus:z-10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring/70 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
-              aria-label="Clear search"
-              type="button"
-              onClick={clearSearch}
-            >
-              <X size={16} strokeWidth={2} aria-hidden="true" />
-            </button>
-          )}
+          {/* Removed custom clear button, relying on browser default for type="search" */}
         </div>
         <Button
           type="submit"

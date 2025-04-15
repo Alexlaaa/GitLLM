@@ -4,16 +4,14 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_LLM_API_KEY || '');
 
-interface SearchResponse {
-  decision_details: {
-    endpoint: 'repositories' | 'code' | 'none';
-    constructed_url: string;
-    feedback: string;
-    reasoning: string;
-    intention: string;
-  };
-  evaluation: {
-    quality: 'high' | 'medium' | 'low';
+// --- Revamped Interface ---
+interface SearchPlanResponse {
+  searchPlan: {
+    searchTarget: 'repositories' | 'code' | 'none'; // Target API endpoint
+    githubQueryString: string; // Query string for GitHub API (without q=)
+    queryAssessment: string; // Brief assessment of query suitability
+    constructionRationale: string; // Explanation of how the query was built
+    inferredIntent: string; // The user's likely goal
   };
 }
 
@@ -37,8 +35,8 @@ interface GitHubCodeSearchItem {
       avatar_url: string;
       html_url: string;
     };
-    stargazers_count?: number; // Optional as it might not always be present
-    forks_count?: number;     // Optional
+    stargazers_count?: number; 
+    forks_count?: number; 
     language: string | null;
   };
 }
@@ -57,13 +55,13 @@ interface GitHubRepoSearchItem {
   forks_count?: number;
   language: string | null;
   score?: number;
-  url: string; // Added URL for consistency
+  url: string; 
 }
-
 
 export async function POST(request: NextRequest) {
   try {
     const { query } = await request.json();
+    console.log(`[API Route /api/search] Received query: "${query}"`); 
 
     if (!query || typeof query !== 'string' || query.trim() === '') {
       return NextResponse.json(
@@ -72,88 +70,117 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Use the Gemini LLM API to transform the query into GitHub search syntax
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
+    // --- Revamped Prompt ---
     const prompt = `
-    You are a specialized assistant that converts natural language queries about GitHub repositories and code into GitHub API search queries. GitHub offers two search endpoints:
-    1. \`/search/repositories\` – for finding repositories.
-    2. \`/search/code\` – for finding code within repositories.
+    **Objective:** Transform a natural language query into an optimized GitHub Search API query string.
 
-    Your task is to:
+    **Context:** GitHub provides two primary search APIs relevant here:
+    *   \`/search/code\`: Finds code snippets within files.
+    *   \`/search/repositories\`: Finds repositories.
 
-    1. **Determine the query type:** Identify whether the user's query is focused on repositories or code. If the user's query appears to be a single word (which may be a GitHub username), assume the intention is to search for repositories owned by that user using the qualifier \`user:<username>\`.
-    
-    2. **Construct the query:** Translate the natural language query into a GitHub API search query string with appropriate parameters and qualifiers. Follow these specific formatting rules:
-       - Always use "qualifier:value" format (e.g., \`language:javascript\`, \`user:username\`)
-       - Separate qualifiers with spaces, NOT plus signs
-       - Common qualifiers: \`language:\`, \`user:\`, \`repo:\`, \`stars:>1000\`, \`created:>2022-01-01\`, \`extension:\`, \`path:\`, \`size:<1000\`
-       - Place search terms BEFORE any qualifiers (e.g., "react component language:javascript")
-       - If using language qualifier, do NOT include the language name in the search terms
-       - Do not include the prefix \`q=\` in the constructed URL
-    
-    3. **Handle unsupported queries:** If the query cannot be served by these two endpoints, return a JSON response that explains why.
+    **Your Task:**
+    1.  **Analyze Intent:** Determine if the user wants to find specific code ('code' target) or repositories ('repositories' target). Default to 'code' unless the query strongly implies searching for repositories (e.g., mentions "repository", "project", or is a single word likely a username).
+    2.  **Construct Query String:** Build the GitHub search query string based on the analyzed intent.
+        *   **Keywords:** Extract the core search terms.
+        *   **Qualifiers:** Intelligently apply relevant GitHub search qualifiers based on the natural language. Key qualifiers include:
+            *   \`repo:owner/name\`: Use ONLY if a specific repository is clearly mentioned.
+            *   \`user:username\`: Use for queries targeting a specific user's code/repos.
+            *   \`language:lang\`: Use if a programming language is specified.
+            *   \`path:path/to/dir\`: Use if a specific directory or path is mentioned.
+            *   \`extension:ext\`: Use if a file extension is mentioned.
+            *   \`in:file,path\`: Use if the query specifies searching within file contents or paths.
+            *   Numeric/Date: \`stars:>\`, \`forks:>\`, \`size:>\`, \`created:>\`, \`pushed:>\`.
+            *   Boolean: \`fork:true/only\`, \`archived:false\`.
+        *   **Logical Operators:** Interpret "and", "or", "not" (and similar terms) using GitHub's \`AND\`, \`OR\`, \`NOT\` operators. \`AND\` is often implicit.
+        *   **Syntax Rules:**
+            *   Keywords first, then qualifiers (e.g., \`"database connection" repo:expressjs/express\`).
+            *   Qualifiers format: \`qualifier:value\`.
+            *   Separate all terms and qualifiers with spaces.
+            *   If \`language:\` is used, do not repeat the language in the keywords.
+            *   The final string MUST NOT include the \`q=\` prefix.
+    3.  **Handle Ambiguity/Unsupported:**
+        *   If the query is clearly unsupported (e.g., searching issues, users directly), set \`searchTarget\` to \`"none"\`.
+        *   If the query is a single word likely a username, default to a repository search: \`searchTarget: "repositories"\`, \`githubQueryString: "user:username"\`.
 
-    **Return Format:**  
-    Always return a valid JSON object that exactly matches the following structure. Do not include any additional keys or markdown formatting:
-
+    **Output Format:** Respond ONLY with a valid JSON object matching this exact structure:
+    \`\`\`json
     {
-      "decision_details": {
-        "endpoint": "repositories | code | none",
-        "constructed_url": "the constructed search query string (without q= prefix)",
-        "feedback": "brief explanation of how well the query matches GitHub search capabilities",
-        "reasoning": "detailed explanation of the parameter choices and any assumptions made",
-        "intention": "interpreted user intention"
-      },
-      "evaluation": {
-        "quality": "high | medium | low"
+      "searchPlan": {
+        "searchTarget": "repositories" | "code" | "none",
+        "githubQueryString": "The constructed query string (keywords + qualifiers)",
+        "queryAssessment": "A brief evaluation of how well the query maps to GitHub search capabilities.",
+        "constructionRationale": "Concise explanation of the chosen target, qualifiers, and any assumptions.",
+        "inferredIntent": "A short summary of what the user is likely trying to achieve."
       }
     }
+    \`\`\`
 
-    Natural language query: ${query}
-    
-    IMPORTANT: For a query like "Find Python code for house robber problem", the constructed_url should be "house robber problem language:python" NOT "python house robber language:python" to avoid confusion with the language qualifier.
+    **Example:**
+    Natural language query: "Find express database connection examples not in tests"
+    Expected JSON Output:
+    \`\`\`json
+    {
+      "searchPlan": {
+        "searchTarget": "code",
+        "githubQueryString": "\\"express database connection examples\\" NOT path:test NOT path:tests",
+        "queryAssessment": "Good mapping to code search with exclusion.",
+        "constructionRationale": "Identified keywords 'express database connection examples'. Inferred exclusion of test directories using 'NOT path:'. Target is 'code' as user asks for examples.",
+        "inferredIntent": "Find code examples for Express database connections, excluding test files."
+      }
+    }
+    \`\`\`
+
+    **User's Natural language query:** ${query}
     `;
 
     // Generate response from LLM
     const result = await model.generateContent(prompt);
     const response = result.response;
     const text = response.text();
+    console.log('[API Route /api/search] Raw LLM response text:', text);
 
     // Parse the JSON response
-    let parsedResponse: SearchResponse;
+    let parsedResponse: SearchPlanResponse; // Use new interface
     try {
-      // Clean up the response by removing markdown code blocks if present
-      const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const cleanedText = text
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
+        .trim();
       parsedResponse = JSON.parse(cleanedText);
+      console.log('[API Route /api/search] Parsed LLM response:', JSON.stringify(parsedResponse, null, 2));
     } catch (parseError) {
-      console.error("Failed to parse LLM response:", text);
-      console.error("Parse error:", parseError);
+      console.error('[API Route /api/search] Failed to parse LLM response:', text);
+      console.error('[API Route /api/search] Parse error:', parseError);
       return NextResponse.json(
-        { error: "Failed to parse LLM response" },
+        { error: 'Failed to parse LLM response' },
         { status: 500 }
       );
     }
 
-    // Execute GitHub search using the constructed query
-    const endpoint = parsedResponse.decision_details.endpoint;
-    const constructedUrl = parsedResponse.decision_details.constructed_url;
+    // --- Use new field names ---
+    const searchTarget = parsedResponse.searchPlan.searchTarget;
+    const githubQueryString = parsedResponse.searchPlan.githubQueryString;
+    const constructionRationale = parsedResponse.searchPlan.constructionRationale; // For explanation
+    const queryAssessment = parsedResponse.searchPlan.queryAssessment; // For feedback/unsupported
 
-    if (endpoint === 'none') {
+    if (searchTarget === 'none') {
+       console.log('[API Route /api/search] LLM determined searchTarget is "none". Assessment:', queryAssessment);
       return NextResponse.json({
         query: {
           originalQuery: query,
           transformedQuery: '',
-          explanation: parsedResponse.decision_details.feedback,
+          explanation: queryAssessment, // Use assessment for 'none' feedback
         },
         results: [],
-        endpoint: endpoint,
-        queryDetails: parsedResponse,
+        endpoint: searchTarget, // Pass new name
+        queryDetails: parsedResponse.searchPlan, // Pass new structure
       });
     }
 
-    // Execute GitHub search
-    const githubApiUrl = `https://api.github.com/search/${endpoint}?q=${encodeURIComponent(constructedUrl)}`;
+    const githubApiUrl = `https://api.github.com/search/${searchTarget}?q=${encodeURIComponent(githubQueryString)}`;
+    console.log(`[API Route /api/search] Calling GitHub API: ${githubApiUrl}`);
 
     const githubResponse = await fetch(githubApiUrl, {
       headers: {
@@ -162,218 +189,133 @@ export async function POST(request: NextRequest) {
         'X-GitHub-Api-Version': '2022-11-28',
       },
     });
+    console.log(`[API Route /api/search] GitHub API response status: ${githubResponse.status}`);
 
     if (!githubResponse.ok) {
       const errorText = await githubResponse.text();
-      console.error('GitHub API error:', errorText);
-      
-      // Return more detailed error information to the client
-      return NextResponse.json({
-        query: {
-          originalQuery: query,
-          transformedQuery: constructedUrl,
-          explanation: parsedResponse.decision_details.reasoning,
+      console.error('[API Route /api/search] GitHub API error text:', errorText);
+      return NextResponse.json(
+        {
+          query: {
+            originalQuery: query,
+            transformedQuery: githubQueryString,
+            explanation: constructionRationale, // Use rationale for error explanation
+          },
+          error: `GitHub API error: ${githubResponse.status}`,
+          errorDetails: errorText,
+          endpoint: searchTarget,
+          queryDetails: parsedResponse.searchPlan,
         },
-        error: `GitHub API error: ${githubResponse.status}`,
-        errorDetails: errorText,
-        endpoint: endpoint,
-        queryDetails: parsedResponse,
-      }, { status: githubResponse.status });
+        { status: githubResponse.status }
+      );
     }
 
     const searchData = await githubResponse.json();
+    console.log(`[API Route /api/search] GitHub API returned ${searchData.items?.length || 0} items.`);
     let finalResults = [];
 
-    if (endpoint === 'code' && searchData.items) {
-      // Fetch content for the top N code results
-      const MAX_CONTENT_FETCHES = 10; // Limit to avoid rate limits/long waits
-      const contentFetchPromises = searchData.items.slice(0, MAX_CONTENT_FETCHES).map(async (item: GitHubCodeSearchItem) => {
-        console.log(`[API Route] Processing item: ${item.path} (URL: ${item.url})`); // LOGGING Start
-        try {
-          const contentUrl = item.url; // Use the item's API URL for content details
-          console.log(`[API Route] Fetching content from: ${contentUrl}`); // LOGGING Fetch URL
-          const contentResponse = await fetch(contentUrl, {
-            headers: {
-              Accept: 'application/vnd.github+json', // Fetch JSON details
-              Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-              'X-GitHub-Api-Version': '2022-11-28',
-            },
-          });
-
-          console.log(`[API Route] Content fetch status for ${item.path}: ${contentResponse.status}`); // LOGGING Fetch Status
-
-          if (!contentResponse.ok) {
-            // Handle cases where content cannot be fetched (e.g., large files, permissions)
-            console.warn(`[API Route] Failed to fetch content for ${item.path}: ${contentResponse.status}`); // LOGGING Fetch Fail
-            // Return the item with placeholder content
-             return {
-              id: item.sha || item.url, // Use sha or url as a unique ID
-              repository: {
-                name: item.repository.name,
-                full_name: item.repository.full_name,
-                description: item.repository.description,
-                html_url: item.repository.html_url,
-                owner: item.repository.owner.login,
-                stars: item.repository.stargazers_count || 0, // Ensure stars is a number
-                forks: item.repository.forks_count || 0, // Ensure forks is a number
-                language: item.repository.language,
+    // --- Keep existing result processing logic ---
+    if (searchTarget === 'code' && searchData.items) {
+      const MAX_CONTENT_FETCHES = 10; 
+      const contentFetchPromises = searchData.items
+        .slice(0, MAX_CONTENT_FETCHES)
+        .map(async (item: GitHubCodeSearchItem) => {
+          try {
+            const contentUrl = item.url; 
+            const contentResponse = await fetch(contentUrl, {
+              headers: {
+                Accept: 'application/vnd.github+json', 
+                Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+                'X-GitHub-Api-Version': '2022-11-28',
               },
-              path: item.path,
-              name: item.name,
-              url: item.url,
-              html_url: item.html_url,
-              codeSnippet: {
-                code: "// Code snippet could not be fetched.",
-                language: item.repository.language || 'plaintext', // Use repo language or default
-                lineStart: 1, // Placeholder
-                lineEnd: 1,   // Placeholder
-              },
-              matchScore: item.score || 0,
-              fullContent: "// Full content could not be fetched.",
+            });
+
+            if (!contentResponse.ok) {
+              console.warn(
+                `[API Route /api/search] Failed to fetch content for ${item.path}: ${contentResponse.status}`
+              ); 
+              return { /* ... return item with placeholder ... */ 
+                id: item.sha || item.url, 
+                repository: { name: item.repository.name, full_name: item.repository.full_name, description: item.repository.description, html_url: item.repository.html_url, owner: item.repository.owner.login, stars: item.repository.stargazers_count || 0, forks: item.repository.forks_count || 0, language: item.repository.language, },
+                path: item.path, name: item.name, url: item.url, html_url: item.html_url,
+                codeSnippet: { code: '// Code snippet could not be fetched.', language: item.repository.language || 'plaintext', lineStart: 1, lineEnd: 1, },
+                matchScore: item.score || 0, fullContent: '// Full content could not be fetched.',
+              };
+            }
+
+            const contentData = await contentResponse.json();
+            let fullContent = '// Content unavailable';
+            if (contentData.content && contentData.encoding === 'base64') {
+              try {
+                fullContent = Buffer.from(contentData.content,'base64').toString('utf-8');
+              } catch (decodeError) {
+                console.error(`[API Route /api/search] Error decoding Base64 content for ${item.path}:`, decodeError); 
+                fullContent = '// Error decoding content';
+              }
+            } else if (contentData.content) {
+              fullContent = contentData.content;
+            } else {
+              console.warn(`[API Route /api/search] No 'content' field found or content is null/empty for ${item.path}`); 
+            }
+
+            const snippetLines = fullContent.split('\n').slice(0, 10).join('\n'); 
+            return { /* ... return item with content ... */ 
+              id: item.sha || item.url, 
+              repository: { name: item.repository.name, full_name: item.repository.full_name, description: item.repository.description, html_url: item.repository.html_url, owner: item.repository.owner.login, stars: item.repository.stargazers_count || 0, forks: item.repository.forks_count || 0, language: item.repository.language, },
+              path: item.path, name: item.name, url: item.url, html_url: item.html_url,
+              codeSnippet: { code: snippetLines || '// Snippet unavailable', language: item.repository.language || 'plaintext', lineStart: 1, lineEnd: snippetLines.split('\n').length, },
+              matchScore: item.score || 0, fullContent: fullContent || '// Content unavailable',
+            };
+          } catch (fetchError: unknown) { /* ... handle fetch error ... */ 
+            const errorMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
+            console.error(`[API Route /api/search] Error fetching content for ${item.path}: ${errorMsg}`);
+            return { /* ... return item with error indication ... */ 
+              id: item.sha || item.url,
+              repository: { name: item.repository.name, full_name: item.repository.full_name, description: item.repository.description, html_url: item.repository.html_url, owner: item.repository.owner.login, stars: item.repository.stargazers_count || 0, forks: item.repository.forks_count || 0, language: item.repository.language, },
+              path: item.path, name: item.name, url: item.url, html_url: item.html_url,
+              codeSnippet: { code: `// Error fetching snippet: ${errorMsg}`, language: 'plaintext', lineStart: 1, lineEnd: 1, },
+              matchScore: item.score || 0, fullContent: `// Error fetching content: ${errorMsg}`,
             };
           }
+        });
 
-          const contentData = await contentResponse.json();
-          console.log(`[API Route] Received content data keys for ${item.path}:`, Object.keys(contentData)); // LOGGING Received Data Keys
+      const remainingItems = searchData.items
+        .slice(MAX_CONTENT_FETCHES)
+        .map((item: GitHubCodeSearchItem) => ({ /* ... map remaining items ... */ 
+          id: item.sha || item.url,
+          repository: { name: item.repository.name, full_name: item.repository.full_name, description: item.repository.description, html_url: item.repository.html_url, owner: item.repository.owner.login, stars: item.repository.stargazers_count || 0, forks: item.repository.forks_count || 0, language: item.repository.language, },
+          path: item.path, name: item.name, url: item.url, html_url: item.html_url,
+          codeSnippet: { code: '// Snippet not fetched (limit reached)', language: item.repository.language || 'plaintext', lineStart: 1, lineEnd: 1, },
+          matchScore: item.score || 0, fullContent: '// Content not fetched (limit reached)',
+        }));
 
-          // Decode Base64 content
-          let fullContent = "// Content unavailable";
-          let decodeSuccess = false;
-          if (contentData.content && contentData.encoding === 'base64') {
-             try {
-               fullContent = Buffer.from(contentData.content, 'base64').toString('utf-8');
-               decodeSuccess = true;
-               console.log(`[API Route] Successfully decoded Base64 content for ${item.path}`); // LOGGING Decode Success
-             } catch (decodeError) {
-               console.error(`[API Route] Error decoding Base64 content for ${item.path}:`, decodeError); // LOGGING Decode Error
-               fullContent = "// Error decoding content";
-             }
-          } else if (contentData.content) {
-             // Handle potential non-base64 content if API changes, though unlikely
-             fullContent = contentData.content;
-             console.log(`[API Route] Received non-Base64 content for ${item.path}`); // LOGGING Non-Base64
-          } else {
-             console.warn(`[API Route] No 'content' field found or content is null/empty for ${item.path}`); // LOGGING No Content Field
-          }
-
-          const snippetLines = fullContent.split('\n').slice(0, 10).join('\n'); // First 10 lines as snippet
-          console.log(`[API Route] Generated snippet for ${item.path} (Decode Success: ${decodeSuccess}): "${snippetLines.substring(0, 50)}..."`); // LOGGING Snippet
-
-          return {
-            id: item.sha || item.url, // Use sha or url as a unique ID
-            repository: {
-              name: item.repository.name,
-              full_name: item.repository.full_name,
-              description: item.repository.description,
-              html_url: item.repository.html_url,
-              owner: item.repository.owner.login,
-              stars: item.repository.stargazers_count || 0, // Ensure stars is a number
-              forks: item.repository.forks_count || 0, // Ensure forks is a number
-              language: item.repository.language,
-            },
-            path: item.path,
-            name: item.name,
-            url: item.url,
-            html_url: item.html_url,
-            codeSnippet: {
-              code: snippetLines || "// Snippet unavailable",
-              language: item.repository.language || 'plaintext', // Use repo language or default
-              lineStart: 1, // Placeholder, actual line numbers not available from search
-              lineEnd: snippetLines.split('\n').length, // Placeholder
-            },
-            matchScore: item.score || 0,
-            fullContent: fullContent || "// Content unavailable",
-          };
-        } catch (fetchError: unknown) {
-          const errorMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
-          console.error(`Error fetching content for ${item.path}: ${errorMsg}`);
-          // Return item with error indication
-          return {
-            id: item.sha || item.url,
-            repository: {
-              name: item.repository.name,
-              full_name: item.repository.full_name,
-              description: item.repository.description,
-              html_url: item.repository.html_url,
-              owner: item.repository.owner.login,
-              stars: item.repository.stargazers_count || 0,
-              forks: item.repository.forks_count || 0,
-              language: item.repository.language,
-            },
-            path: item.path,
-            name: item.name,
-            url: item.url,
-            html_url: item.html_url,
-            codeSnippet: { code: `// Error fetching snippet: ${errorMsg}`, language: 'plaintext', lineStart: 1, lineEnd: 1 },
-            matchScore: item.score || 0,
-            fullContent: `// Error fetching content: ${errorMsg}`,
-          };
-        }
-      });
-
-      // Add remaining items without content fetching
-      const remainingItems = searchData.items.slice(MAX_CONTENT_FETCHES).map((item: GitHubCodeSearchItem) => ({
-         id: item.sha || item.url,
-         repository: {
-           name: item.repository.name,
-           full_name: item.repository.full_name,
-           description: item.repository.description,
-           html_url: item.repository.html_url,
-           owner: item.repository.owner.login,
-           stars: item.repository.stargazers_count || 0,
-           forks: item.repository.forks_count || 0,
-           language: item.repository.language,
-         },
-         path: item.path,
-         name: item.name,
-         url: item.url,
-         html_url: item.html_url,
-         codeSnippet: { code: "// Snippet not fetched (limit reached)", language: item.repository.language || 'plaintext', lineStart: 1, lineEnd: 1 },
-         matchScore: item.score || 0,
-         fullContent: "// Content not fetched (limit reached)",
-      }));
-
-      finalResults = [...(await Promise.all(contentFetchPromises)), ...remainingItems];
-
-    } else if (endpoint === 'repositories' && searchData.items) {
-      // Map repository search results (no code content needed)
-      finalResults = searchData.items.map((item: GitHubRepoSearchItem) => ({
+      finalResults = [
+        ...(await Promise.all(contentFetchPromises)),
+        ...remainingItems,
+      ];
+    } else if (searchTarget === 'repositories' && searchData.items) {
+      finalResults = searchData.items.map((item: GitHubRepoSearchItem) => ({ /* ... map repo items ... */ 
         id: item.id,
-        repository: {
-          name: item.name,
-          full_name: item.full_name,
-          description: item.description,
-          html_url: item.html_url,
-          owner: item.owner.login,
-          stars: item.stargazers_count || 0,
-          forks: item.forks_count || 0,
-          language: item.language,
-        },
-        // Add dummy values for code-specific fields if needed by frontend type
-        path: '',
-        name: '',
-        url: item.url,
-        html_url: item.html_url,
-        codeSnippet: { code: '', language: '', lineStart: 0, lineEnd: 0 },
-        matchScore: item.score || 0,
-        fullContent: '',
+        repository: { name: item.name, full_name: item.full_name, description: item.description, html_url: item.html_url, owner: item.owner.login, stars: item.stargazers_count || 0, forks: item.forks_count || 0, language: item.language, },
+        path: '', name: item.name, url: item.url, html_url: item.html_url,
+        codeSnippet: { code: '', language: '', lineStart: 0, lineEnd: 0 }, 
+        matchScore: item.score || 0, fullContent: '',
       }));
     }
-
 
     return NextResponse.json({
       query: {
         originalQuery: query,
-        transformedQuery: constructedUrl,
-        explanation: parsedResponse.decision_details.reasoning,
+        transformedQuery: githubQueryString, // Use new name
+        explanation: constructionRationale, // Use new name
       },
-      results: finalResults, // Use the processed results
-      endpoint: endpoint,
-      queryDetails: parsedResponse,
+      results: finalResults, 
+      endpoint: searchTarget, // Use new name
+      queryDetails: parsedResponse.searchPlan, // Use new structure/name
     });
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error('Error processing search:', errorMessage);
+    console.error('[API Route /api/search] Error processing search:', errorMessage);
     return NextResponse.json(
       { error: `Failed to process search request: ${errorMessage}` },
       { status: 500 }
