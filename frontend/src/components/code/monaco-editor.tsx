@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import * as monaco from "monaco-editor";
+import { loadMonaco, createDefaultEditorOptions } from "@/lib/monaco-config";
+import type * as Monaco from "monaco-editor";
 import { useTheme } from "next-themes";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,65 +47,126 @@ export function MonacoEditor({
   height = "300px",
 }: MonacoEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
-  const monacoEditorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const monacoEditorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+  const [monacoInstance, setMonacoInstance] = useState<typeof Monaco | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState(language);
   const [copied, setCopied] = useState(false);
   const { theme } = useTheme();
   const isDarkTheme = theme === "dark";
 
-  // Set up Monaco editor
+  // Initialize Monaco
   useEffect(() => {
-    if (!editorRef.current) return;
-
-    // Configure editor
-    const editor = monaco.editor.create(editorRef.current, {
-      value: initialValue,
-      language: selectedLanguage,
-      automaticLayout: true,
-      minimap: { enabled: false },
-      scrollBeyondLastLine: false,
-      readOnly,
-      theme: isDarkTheme ? "vs-dark" : "vs-light",
-      fontSize: 14,
-      fontFamily: "'Geist Mono', monospace",
-      lineNumbers: "on",
-      scrollbar: {
-        vertical: 'visible',
-        horizontal: 'visible',
-      },
-      roundedSelection: true,
-      renderLineHighlight: "all",
-    });
-
-    // Set up event listeners
-    editor.onDidChangeModelContent(() => {
-      const value = editor.getValue();
-      onChange?.(value);
-    });
-
-    // Update editor theme when theme changes
-    monaco.editor.setTheme(isDarkTheme ? "vs-dark" : "vs-light");
+    // Load Monaco using our singleton utility
+    let mounted = true;
     
-    // Store editor reference
-    monacoEditorRef.current = editor;
-
-    // Clean up on unmount
-    return () => {
-      editor.dispose();
+    const initMonaco = async () => {
+      try {
+        const monaco = await loadMonaco();
+        if (monaco && mounted) {
+          setMonacoInstance(monaco);
+        }
+      } catch (error) {
+        console.error("Failed to load Monaco editor:", error);
+      }
     };
-  }, [initialValue, isDarkTheme]);
 
-  // Update editor language when language changes
+    initMonaco();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Effect to create the editor instance once
+  useEffect(() => {
+    if (monacoInstance && editorRef.current && !monacoEditorRef.current) {
+      const editorOptions = createDefaultEditorOptions({
+        value: initialValue,
+        language: selectedLanguage,
+        readOnly,
+        theme: isDarkTheme ? "vs-dark" : "vs-light",
+        roundedSelection: true,
+        automaticLayout: false, // Keep disabled for now
+      });
+
+      try {
+        const editor = monacoInstance.editor.create(editorRef.current, editorOptions);
+        monacoEditorRef.current = editor;
+
+        // Attach listener for changes
+        const changeListener = editor.onDidChangeModelContent(() => {
+          const currentValue = editor.getValue();
+          onChange?.(currentValue);
+        });
+
+        // Initial theme set
+        monacoInstance.editor.setTheme(isDarkTheme ? "vs-dark" : "vs-light");
+
+        // Cleanup function for this effect (disposes editor and listener)
+        return () => {
+          changeListener.dispose();
+          if (monacoEditorRef.current) {
+             // Defensive cleanup from previous attempts
+             const editorToDispose = monacoEditorRef.current;
+             monacoEditorRef.current = null; // Clear ref first
+             try {
+               const model = editorToDispose.getModel();
+               if (model && typeof editorToDispose.setModel === 'function') {
+                 editorToDispose.setModel(null);
+               }
+             } catch (modelError) {
+               console.error("Error detaching model on final cleanup:", modelError);
+             }
+             try {
+               if (typeof editorToDispose.dispose === 'function') {
+                 editorToDispose.dispose();
+               }
+             } catch (disposeError) {
+               console.error("Error disposing editor on final cleanup:", disposeError);
+             }
+          }
+        };
+      } catch (error) {
+        console.error("Failed to create Monaco editor:", error);
+      }
+    }
+    // Dependencies: only run when monacoInstance is loaded and ref is available
+  }, [monacoInstance, onChange]); // onChange added as it's used in listener
+
+  // Effect to update editor value when initialValue prop changes
+  useEffect(() => {
+    if (monacoEditorRef.current && monacoEditorRef.current.getValue() !== initialValue) {
+      // Use pushEditOperations to preserve undo stack if needed, or setValue for simplicity
+      monacoEditorRef.current.setValue(initialValue);
+    }
+  }, [initialValue]);
+
+  // Effect to update editor language when selectedLanguage state changes
+  useEffect(() => {
+    if (monacoInstance && monacoEditorRef.current) {
+      const model = monacoEditorRef.current.getModel();
+      if (model && model.getLanguageId() !== selectedLanguage) {
+        monacoInstance.editor.setModelLanguage(model, selectedLanguage);
+      }
+    }
+  }, [monacoInstance, selectedLanguage]);
+
+  // Effect to update editor theme when isDarkTheme changes
+  useEffect(() => {
+    if (monacoInstance && monacoEditorRef.current) {
+      monacoInstance.editor.setTheme(isDarkTheme ? "vs-dark" : "vs-light");
+    }
+  }, [monacoInstance, isDarkTheme]);
+
+  // Effect to update readOnly status
   useEffect(() => {
     if (monacoEditorRef.current) {
-      monaco.editor.setModelLanguage(
-        monacoEditorRef.current.getModel()!,
-        selectedLanguage
-      );
+      monacoEditorRef.current.updateOptions({ readOnly: readOnly });
     }
-  }, [selectedLanguage]);
+  }, [readOnly]);
 
-  // Handle language change
+
+  // Handle language change from Select component
   const handleLanguageChange = (value: string) => {
     setSelectedLanguage(value);
   };

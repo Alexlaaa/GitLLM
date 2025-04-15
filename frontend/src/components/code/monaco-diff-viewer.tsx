@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
+import { loadMonaco, createDefaultDiffEditorOptions } from "@/lib/monaco-config";
+import type * as Monaco from "monaco-editor";
 import { Card } from "@/components/ui/card";
 import { FileIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -24,90 +26,163 @@ export function MonacoDiffViewer({
   filename = "Code Comparison",
 }: MonacoDiffViewerProps) {
   const [isMounted, setIsMounted] = useState(false);
-  const [monaco, setMonaco] = useState<typeof import('monaco-editor') | null>(null);
-  const [diffEditor, setDiffEditor] = useState<import('monaco-editor').editor.IStandaloneDiffEditor | null>(null);
+  const [monacoInstance, setMonacoInstance] = useState<typeof Monaco | null>(null);
+  const [diffEditor, setDiffEditor] = useState<Monaco.editor.IStandaloneDiffEditor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   const isDarkTheme = theme === "dark";
+  
+  // Models refs to properly handle cleanup
+  const originalModelRef = useRef<Monaco.editor.ITextModel | null>(null);
+  const modifiedModelRef = useRef<Monaco.editor.ITextModel | null>(null);
 
   // Handle client-side only code
   useEffect(() => {
     setIsMounted(true);
-    // Dynamically import Monaco Editor only on client side
-    const loadMonaco = async () => {
+    
+    // Load Monaco singleton instance
+    const initMonaco = async () => {
       try {
-        const monacoModule = await import('monaco-editor');
-        setMonaco(monacoModule);
+        const monaco = await loadMonaco();
+        if (monaco) {
+          setMonacoInstance(monaco);
+        }
       } catch (err) {
         console.error("Failed to load Monaco:", err);
       }
     };
     
-    loadMonaco();
-  }, []);
-
-  // Set up Monaco diff editor
-  useEffect(() => {
-    if (!monaco || !containerRef.current || !isMounted) return;
+    initMonaco();
     
-    // Clean up previous instance if it exists
-    if (diffEditor) {
-      diffEditor.dispose();
-    }
-    
-    // Configure editor options
-    const options: import('monaco-editor').editor.IDiffEditorConstructionOptions = {
-      readOnly: true,
-      minimap: { enabled: false },
-      scrollBeyondLastLine: false,
-      renderSideBySide: true,
-      fontSize: 14,
-      fontFamily: "'Geist Mono', monospace",
-      automaticLayout: true,
-      contextmenu: false,
-      folding: true,
-      lineNumbers: 'on' as const,
-      diffWordWrap: 'off',
-      renderOverviewRuler: false,
-      guides: {
-        indentation: true
+    // Cleanup on unmount
+    return () => {
+      // Cleanup models first
+      if (originalModelRef.current) {
+        originalModelRef.current.dispose();
+        originalModelRef.current = null;
+      }
+      
+      if (modifiedModelRef.current) {
+        modifiedModelRef.current.dispose();
+        modifiedModelRef.current = null;
+      }
+      
+      // Then cleanup editor
+      if (diffEditor) {
+        diffEditor.dispose();
       }
     };
+  }, []);
 
-    try {
-      // Create diff editor
-      const newDiffEditor = monaco.editor.createDiffEditor(containerRef.current, options);
+  // Set up Monaco diff editor when Monaco is loaded or props change
+  useEffect(() => {
+    if (!monacoInstance || !containerRef.current || !isMounted) return;
+    
+    // Create a variable to track if this effect instance is still active
+    let isEffectActive = true;
+    let localDiffEditor: Monaco.editor.IStandaloneDiffEditor | null = null;
+    
+    const setupDiffEditor = async () => {
+      try {
+        // Clean up previous models and editor instance if they exist
+        if (originalModelRef.current) {
+          originalModelRef.current.dispose();
+          originalModelRef.current = null;
+        }
+        
+        if (modifiedModelRef.current) {
+          modifiedModelRef.current.dispose();
+          modifiedModelRef.current = null;
+        }
+        
+        if (diffEditor) {
+          diffEditor.dispose();
+        }
+        
+        // Double check container ref exists
+        if (!containerRef.current || !isEffectActive) return;
+        
+        // Create models for original and modified code
+        originalModelRef.current = monacoInstance.editor.createModel(originalCode, language);
+        modifiedModelRef.current = monacoInstance.editor.createModel(modifiedCode, language);
+        
+        // Create options using our utility function
+        const options = createDefaultDiffEditorOptions({
+          readOnly: true,
+          contextmenu: false,
+          diffWordWrap: 'off',
+          guides: {
+            indentation: true
+          }
+        });
+        
+        // Create diff editor
+        localDiffEditor = monacoInstance.editor.createDiffEditor(containerRef.current, options);
+        
+        // Check if effect is still active
+        if (!isEffectActive) {
+          if (localDiffEditor) localDiffEditor.dispose();
+          if (originalModelRef.current) {
+            originalModelRef.current.dispose();
+            originalModelRef.current = null;
+          }
+          if (modifiedModelRef.current) {
+            modifiedModelRef.current.dispose();
+            modifiedModelRef.current = null;
+          }
+          return;
+        }
+        
+        // Set the models
+        localDiffEditor.setModel({
+          original: originalModelRef.current,
+          modified: modifiedModelRef.current,
+        });
+        
+        // Update state
+        if (isEffectActive) {
+          setDiffEditor(localDiffEditor);
+        }
+      } catch (err) {
+        console.error("Error creating Monaco diff editor:", err);
+      }
+    };
+    
+    setupDiffEditor();
+    
+    // Clean up function
+    return () => {
+      isEffectActive = false;
       
-      // Create models for original and modified code
-      const originalModel = monaco.editor.createModel(originalCode, language);
-      const modifiedModel = monaco.editor.createModel(modifiedCode, language);
-      
-      // Set the models
-      newDiffEditor.setModel({
-        original: originalModel,
-        modified: modifiedModel,
-      });
-      
-      setDiffEditor(newDiffEditor);
-      
-      // Clean up models on unmount
-      return () => {
-        newDiffEditor.dispose();
-        originalModel.dispose();
-        modifiedModel.dispose();
-      };
-    } catch (err) {
-      console.error("Error creating Monaco diff editor:", err);
-      return () => {/* No cleanup needed */}
-    }
-  }, [monaco, isMounted, originalCode, modifiedCode, language, isDarkTheme]);
+      // Use setTimeout to avoid race conditions
+      setTimeout(() => {
+        try {
+          if (originalModelRef.current) {
+            originalModelRef.current.dispose();
+            originalModelRef.current = null;
+          }
+          
+          if (modifiedModelRef.current) {
+            modifiedModelRef.current.dispose();
+            modifiedModelRef.current = null;
+          }
+          
+          if (diffEditor) {
+            diffEditor.dispose();
+          }
+        } catch (e) {
+          console.error("Error during diff editor cleanup:", e);
+        }
+      }, 0);
+    };
+  }, [monacoInstance, isMounted, originalCode, modifiedCode, language, isDarkTheme, diffEditor]);
 
   // Update theme when it changes
   useEffect(() => {
-    if (monaco?.editor) {
-      monaco.editor.setTheme(isDarkTheme ? "vs-dark" : "vs-light");
+    if (monacoInstance?.editor) {
+      monacoInstance.editor.setTheme(isDarkTheme ? "vs-dark" : "vs-light");
     }
-  }, [isDarkTheme, monaco]);
+  }, [isDarkTheme, monacoInstance]);
 
   // If we're in SSR or haven't loaded Monaco yet, return a placeholder
   if (!isMounted) {
