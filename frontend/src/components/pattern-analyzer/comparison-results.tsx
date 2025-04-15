@@ -53,7 +53,7 @@ export default function ComparisonResults({
   return (
     <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 text-gray-800 w-full mx-auto">
       {/* Similar implementations list - reduced width */}
-      <Card className="p-4 lg:col-span-1 bg-white h-full flex flex-col">
+      <Card className="p-4 lg:col-span-1 bg-white h-full flex flex-col border-0 shadow-md rounded-xl">
         <h3 className="text-lg font-semibold mb-4 text-gray-800">
           Similar Implementations
         </h3>
@@ -63,9 +63,9 @@ export default function ComparisonResults({
             {results.map((result) => (
               <Card
                 key={result.path}
-                className={`p-4 cursor-pointer transition-colors hover:bg-gray-100 bg-white text-gray-800 ${
+                className={`p-4 cursor-pointer transition-colors hover:bg-gray-200 bg-gray-100 text-gray-800 rounded-lg border-0 shadow-none ${
                   selectedResult === result.path
-                    ? 'border-primary/50 bg-gray-100'
+                    ? 'bg-green-100 border-green-200'
                     : ''
                 }`}
                 onClick={() => setSelectedResult(result.path)}
@@ -141,7 +141,7 @@ export default function ComparisonResults({
       <div className="lg:col-span-5 space-y-6">
         {currentResult && (
           <>
-            <Card className="p-4 bg-white">
+            <Card className="p-4 bg-white border-0 shadow-md rounded-xl">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-800">
@@ -210,7 +210,7 @@ export default function ComparisonResults({
                   value="insights"
                   className="mt-0 h-[850px] overflow-auto"
                 >
-                  <Card className="p-0 overflow-hidden rounded-lg shadow-sm bg-white">
+                  <Card className="overflow-hidden rounded-lg bg-white h-full flex flex-col border-0 shadow-md">
                     {/* Code analysis header */}
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4">
                       <h3 className="text-lg font-medium">Code Analysis</h3>
@@ -220,9 +220,9 @@ export default function ComparisonResults({
                     </div>
 
                     {/* Analysis sections */}
-                    <div className="grid gap-1 p-1">
+                    <div className="flex-1 flex flex-col">
                       {/* Overview section */}
-                      <div className="p-4">
+                      <div className="p-5 border-b border-gray-100">
                         <div className="flex items-center mb-3 text-blue-700">
                           <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3">
                             <svg
@@ -244,16 +244,14 @@ export default function ComparisonResults({
                           <h4 className="text-base font-semibold">Overview</h4>
                         </div>
                         <div className="pl-11">
-                          <div className="p-4 rounded-lg border border-blue-200 bg-blue-50/30 text-sm leading-relaxed text-gray-700">
+                          <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 text-sm leading-relaxed text-gray-700">
                             {currentResult.analysis.insights}
                           </div>
                         </div>
                       </div>
 
-                      <Separator />
-
                       {/* Technical Analysis section */}
-                      <div className="p-4">
+                      <div className="p-5 border-b border-gray-100">
                         <div className="flex items-center mb-3 text-purple-700">
                           <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center mr-3">
                             <svg
@@ -276,16 +274,14 @@ export default function ComparisonResults({
                           </h4>
                         </div>
                         <div className="pl-11">
-                          <div className="p-4 rounded-lg border border-purple-200 bg-purple-50/30 text-sm leading-relaxed text-gray-700">
+                          <div className="p-4 bg-purple-50 rounded-lg border border-purple-100 text-sm leading-relaxed text-gray-700">
                             {currentResult.analysis.technicalAnalysis}
                           </div>
                         </div>
                       </div>
 
-                      <Separator />
-
                       {/* Best Practices section */}
-                      <div className="p-4">
+                      <div className="p-5 border-b border-gray-100">
                         <div className="flex items-center mb-3 text-amber-700">
                           <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center mr-3">
                             <svg
@@ -308,17 +304,15 @@ export default function ComparisonResults({
                             Best Practices
                           </h4>
                         </div>
-                        <div className="pl-11 pb-2">
-                          <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-lg border border-amber-200 text-sm leading-relaxed text-gray-700">
+                        <div className="pl-11">
+                          <div className="p-4 bg-amber-50 rounded-lg border border-amber-100 text-sm leading-relaxed text-gray-700">
                             {currentResult.analysis.bestPractices}
                           </div>
                         </div>
                       </div>
 
-                      <Separator />
-
-                      {/* Improvement Areas section */}
-                      <div className="p-4">
+                      {/* Improvement Areas section - with flex-grow to fill remaining space */}
+                      <div className="p-5 flex-grow">
                         <div className="flex items-center mb-3 text-red-700">
                           <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center mr-3">
                             <svg
@@ -341,8 +335,8 @@ export default function ComparisonResults({
                             Improvement Areas
                           </h4>
                         </div>
-                        <div className="pl-11 pb-2">
-                          <div className="bg-gradient-to-r from-red-50 to-rose-50 p-4 rounded-lg border border-red-200 text-sm leading-relaxed text-gray-700">
+                        <div className="pl-11">
+                          <div className="p-4 bg-red-50 rounded-lg border border-red-100 text-sm leading-relaxed text-gray-700">
                             {currentResult.analysis.improvementAreas ||
                               'No specific improvement areas identified.'}
                           </div>
@@ -354,47 +348,89 @@ export default function ComparisonResults({
               </Tabs>
             </Card>
 
-            <Card className="p-4 bg-white">
-              <h3 className="text-lg font-semibold mb-2 text-gray-800">
-                Repository Details
-              </h3>
-              <p className="text-sm mb-4 text-gray-700">
-                {currentResult.repository.description}
+            <Card className="p-4 bg-white border-0 shadow-md rounded-xl">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+                  <svg 
+                    className="w-5 h-5 mr-2 text-indigo-500" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                    />
+                  </svg>
+                  Repository Details
+                </h3>
+              </div>
+              
+              <p className="text-sm mb-4 text-gray-700 bg-indigo-50 p-3 rounded-md">
+                {currentResult.repository.description || 'No description available for this repository.'}
               </p>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">Stars</h4>
-                  <p className="font-mono text-gray-800">
-                    {currentResult.repository.stars.toLocaleString()}
-                  </p>
+              <div className="flex items-center justify-between">
+                <div className="flex space-x-6">
+                  <div className="flex items-center">
+                    <div className="rounded-full bg-yellow-100 p-1.5 mr-2">
+                      <Star className="h-4 w-4 text-yellow-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-medium text-gray-500">Stars</h4>
+                      <p className="font-mono font-medium text-gray-800">
+                        {currentResult.repository.stars.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="rounded-full bg-blue-100 p-1.5 mr-2">
+                      <GitFork className="h-4 w-4 text-blue-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-medium text-gray-500">Forks</h4>
+                      <p className="font-mono font-medium text-gray-800">
+                        {currentResult.repository.forks.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="rounded-full bg-indigo-100 p-1.5 mr-2">
+                      <svg 
+                        className="h-4 w-4 text-indigo-500" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24" 
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" 
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-medium text-gray-500">Language</h4>
+                      <p className="font-medium text-gray-800">
+                        {currentResult.repository.language || 'Unknown'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">Forks</h4>
-                  <p className="font-mono text-gray-800">
-                    {currentResult.repository.forks.toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">
-                    Language
-                  </h4>
-                  <p className="text-gray-800">
-                    {currentResult.repository.language || 'Unknown'}
-                  </p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">GitHub</h4>
-                  <a
-                    href={currentResult.repository.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline flex items-center text-sm"
-                  >
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    View Repository
-                  </a>
-                </div>
+                <a
+                  href={currentResult.repository.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-sm text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded transition-colors"
+                >
+                  <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                  View on GitHub
+                </a>
               </div>
             </Card>
           </>
