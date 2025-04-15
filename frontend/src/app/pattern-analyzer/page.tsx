@@ -21,8 +21,8 @@ export default function PatternAnalyzerPage() {
       disableTransitionOnChange
     >
       <div className="min-h-screen bg-slate-50 py-16">
-        <div className="container mx-auto px-4">
-          <div className="max-w-10xl mx-auto mb-10">
+        <div className="container mx-auto px-4 max-w-none">
+          <div className="w-full mx-auto mb-10">
             <h1 className="text-4xl font-semibold text-gray-900 mb-4">
               Code Pattern Analyzer
             </h1>

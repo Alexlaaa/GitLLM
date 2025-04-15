@@ -97,8 +97,8 @@ export default function PatternAnalyzerInterface() {
   };
 
   return (
-    <div className="space-y-6 text-gray-800">
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+    <div className="space-y-6 text-gray-800 w-full max-w-none">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full max-w-none">
         <TabsList className="grid w-full grid-cols-2 bg-gray-100">
           <TabsTrigger className="data-[state=active]:bg-white data-[state=active]:text-black text-gray-900 font-semibold" value="input">
             <span className="text-inherit">Pattern Input</span>
@@ -107,10 +107,10 @@ export default function PatternAnalyzerInterface() {
             <span className="text-inherit">Comparison Results</span> {results.length > 0 && `(${results.length})`}
           </TabsTrigger>
         </TabsList>
-        <TabsContent value="input" className="space-y-4 mt-4">
+        <TabsContent value="input" className="space-y-4 mt-4 w-full">
           <CodePatternInput onSubmit={handlePatternSubmit} isLoading={isLoading} />
         </TabsContent>
-        <TabsContent value="results" className="space-y-4 mt-4">
+        <TabsContent value="results" className="space-y-4 mt-4 w-full">
           {isLoading ? (
             <Card className="p-6 flex items-center justify-center bg-white">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
