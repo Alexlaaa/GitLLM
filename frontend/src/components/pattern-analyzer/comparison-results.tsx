@@ -211,7 +211,7 @@ export default function ComparisonResults({
 
                       <Separator />
 
-                      {/* Technical Details section */}
+                      {/* Technical Analysis section */}
                       <div className="p-4">
                         <div className="flex items-center mb-3 text-purple-700">
                           <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center mr-3">
@@ -231,52 +231,12 @@ export default function ComparisonResults({
                             </svg>
                           </div>
                           <h4 className="text-base font-semibold">
-                            Technical Details
+                            Technical Analysis
                           </h4>
                         </div>
                         <div className="pl-11">
                           <div className="p-4 rounded-lg border border-purple-200 bg-purple-50/30 text-sm leading-relaxed text-gray-700">
-                            {currentResult.analysis.technicalDetails}
-                          </div>
-                        </div>
-                      </div>
-
-                      <Separator />
-
-                      {/* Implementation Approach section */}
-                      <div className="p-4">
-                        <div className="flex items-center mb-3 text-emerald-700">
-                          <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center mr-3">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="18"
-                              height="18"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <rect
-                                x="2"
-                                y="3"
-                                width="20"
-                                height="14"
-                                rx="2"
-                                ry="2"
-                              />
-                              <line x1="8" y1="21" x2="16" y2="21" />
-                              <line x1="12" y1="17" x2="12" y2="21" />
-                            </svg>
-                          </div>
-                          <h4 className="text-base font-semibold">
-                            Implementation Approach
-                          </h4>
-                        </div>
-                        <div className="pl-11">
-                          <div className="p-4 rounded-lg border border-emerald-200 bg-emerald-50/30 text-sm leading-relaxed text-gray-700">
-                            {currentResult.analysis.implementationApproach}
+                            {currentResult.analysis.technicalAnalysis}
                           </div>
                         </div>
                       </div>

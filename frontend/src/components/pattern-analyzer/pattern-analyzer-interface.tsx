@@ -33,8 +33,7 @@ export interface Repository {
 
 export interface AnalysisResult {
   insights: string;
-  technicalDetails: string;
-  implementationApproach: string;
+  technicalAnalysis: string;
   bestPractices: string;
   improvementAreas: string;
 }

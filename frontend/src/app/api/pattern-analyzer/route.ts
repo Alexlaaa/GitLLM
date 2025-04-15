@@ -7,8 +7,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_LLM_API_KEY || '');
 
 interface PatternAnalysisResult {
   insights: string;
-  technicalDetails: string;
-  implementationApproach: string;
+  technicalAnalysis: string;
   bestPractices: string;
   improvementAreas: string;
 }
@@ -203,9 +202,7 @@ async function analyzeCodePatterns(
   {
     "insights": "Give a high-level overview of what this code does, its purpose, and key functionality. Explain the pattern demonstrated and how both implementations approach the same problem. Include any notable differences in philosophy or design approach.",
     
-    "technicalDetails": "Provide specific technical details about how the target implementation works. Explain algorithms, data structures, language features, and techniques being used. Be specific and educational.",
-    
-    "implementationApproach": "Compare the implementation approaches between source and target code. What patterns, techniques, or paradigms does each use? What are the tradeoffs? Would certain approaches work better in different contexts?",
+    "technicalAnalysis": "Provide a comprehensive technical analysis of the target implementation. Explain how the implementation works including algorithms, data structures, language features and techniques used. Compare implementation approaches between source and target code, discussing patterns, paradigms, and potential tradeoffs. Evaluate whether certain approaches might work better in different contexts.",
     
     "bestPractices": "Highlight best practices demonstrated in the target code. Note any performance optimizations, security considerations, maintainability improvements, or other quality aspects. Suggest what the user could learn from this implementation. If there are no notable best practices, it's okay to mention that.",
     
@@ -234,9 +231,7 @@ async function analyzeCodePatterns(
     console.error('Error analyzing code patterns:', error);
     return {
       insights: 'Failed to analyze code patterns',
-      technicalDetails:
-        'Analysis could not be completed due to a technical error.',
-      implementationApproach: 'Unable to compare implementations at this time.',
+      technicalAnalysis: 'Analysis could not be completed due to a technical error. Unable to compare implementations at this time.',
       bestPractices: 'Analysis was not successful, please try again.',
       improvementAreas:
         'Could not identify improvement areas due to analysis failure.',
