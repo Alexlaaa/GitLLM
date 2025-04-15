@@ -46,21 +46,25 @@ export async function POST(request: NextRequest) {
       searchQuery += ` language:${language}`;
     }
 
-    // Add any additional filters
-    if (filters) {
-      if (filters.stars) {
-        searchQuery += ` stars:>${filters.stars}`;
-      }
-      if (filters.forks) {
-        searchQuery += ` forks:>${filters.forks}`;
-      }
-      if (filters.repoFilter) {
+    // Add user filter directly to search query
+    if (filters && filters.userFilter) {
+      searchQuery += ` user:${filters.userFilter}`;
+    }
+    
+    // Add repository filter with proper format validation
+    if (filters && filters.repoFilter) {
+      // GitHub requires repo filter in exact format "owner/repo"
+      const repoPattern = /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/;
+      if (repoPattern.test(filters.repoFilter)) {
         searchQuery += ` repo:${filters.repoFilter}`;
-      }
-      if (filters.userFilter) {
-        searchQuery += ` user:${filters.userFilter}`;
+        console.log(`Adding repo filter: repo:${filters.repoFilter}`);
+      } else {
+        console.warn(`Invalid repo format: ${filters.repoFilter}, must be owner/repo`);
       }
     }
+
+    // Note: stars and forks filters will be applied after fetching results
+    // since GitHub's code search API doesn't directly support these qualifiers
 
     // Execute GitHub search for code patterns
     const githubApiUrl = `https://api.github.com/search/code?q=${encodeURIComponent(searchQuery)}`;

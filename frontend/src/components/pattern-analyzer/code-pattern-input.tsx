@@ -49,8 +49,6 @@ export default function CodePatternInput({
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [starFilter, setStarFilter] = useState<string>('');
-  const [forkFilter, setForkFilter] = useState<string>('');
   const [repoFilter, setRepoFilter] = useState('');
   const [userFilter, setUserFilter] = useState('');
 
@@ -58,8 +56,6 @@ export default function CodePatternInput({
     if (!code.trim()) return;
 
     const filters = {
-      ...(starFilter ? { stars: parseInt(starFilter) } : {}),
-      ...(forkFilter ? { forks: parseInt(forkFilter) } : {}),
       ...(repoFilter ? { repoFilter } : {}),
       ...(userFilter ? { userFilter } : {}),
     };
@@ -122,37 +118,15 @@ export default function CodePatternInput({
           </h2>
 
           <Collapsible open={showFilters} onOpenChange={setShowFilters}>
-            <CollapsibleTrigger className="flex items-center justify-between w-full text-left font-medium mb-4">
+            <CollapsibleTrigger className="flex items-center justify-between w-full text-left font-medium mb-4 border border-gray-200 p-3 rounded-md bg-gray-50 hover:bg-gray-100 transition-colors">
               <span className="text-gray-900">Additional Filters</span>
               {showFilters ? (
-                <ChevronDown className="h-5 w-5" />
+                <ChevronDown className="h-5 w-5 text-gray-600" />
               ) : (
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="h-5 w-5 text-gray-600" />
               )}
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-800">
-                  Minimum Stars
-                </label>
-                <Input
-                  type="number"
-                  value={starFilter}
-                  onChange={(e) => setStarFilter(e.target.value)}
-                  placeholder="e.g., 100"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-800">
-                  Minimum Forks
-                </label>
-                <Input
-                  type="number"
-                  value={forkFilter}
-                  onChange={(e) => setForkFilter(e.target.value)}
-                  placeholder="e.g., 50"
-                />
-              </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-800">
                   Repository Filter
@@ -160,8 +134,12 @@ export default function CodePatternInput({
                 <Input
                   value={repoFilter}
                   onChange={(e) => setRepoFilter(e.target.value)}
-                  placeholder="owner/repo"
+                  placeholder="owner/repo (e.g., facebook/react)"
+                  className="text-gray-800 placeholder:text-gray-500"
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  Format must be exactly "owner/repo" with no spaces
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-800">
@@ -171,6 +149,7 @@ export default function CodePatternInput({
                   value={userFilter}
                   onChange={(e) => setUserFilter(e.target.value)}
                   placeholder="e.g., facebook"
+                  className="text-gray-800 placeholder:text-gray-500"
                 />
               </div>
             </CollapsibleContent>
@@ -184,6 +163,7 @@ export default function CodePatternInput({
               focused patterns yield better comparisons.
             </p>
           </div>
+          
         </Card>
       </div>
     </div>

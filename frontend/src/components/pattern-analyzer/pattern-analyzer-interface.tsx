@@ -14,8 +14,6 @@ export interface CodePattern {
   code: string;
   language: string;
   filters: {
-    stars?: number;
-    forks?: number;
     repoFilter?: string;
     userFilter?: string;
   };
