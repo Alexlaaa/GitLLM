@@ -5,30 +5,37 @@ import SearchBar from "@/components/search/search-bar";
 import { SearchResultsDisplay } from "@/components/search/search-results-display";
 import { Code } from "lucide-react";
 
-// GitHub API response item type
-interface GitHubCodeItem {
+// Type for the data structure returned by our /api/search endpoint
+interface ApiSearchResultItem {
+  id: string;
   repository: {
     name: string;
     full_name: string;
     description: string | null;
     html_url: string;
-    owner?: { login: string };
-    stargazers_count?: number;
-    forks_count?: number;
-    language?: string | null;
+    owner: string; // API route ensures this exists
+    stars: number; // API route ensures this exists
+    forks: number; // API route ensures this exists
+    language: string | null;
   };
-  sha?: string;
   path: string;
   name: string;
   url: string;
   html_url?: string;
-  score: number;
-  text_matches?: Array<{
-    fragment?: string;
-  }>;
+  codeSnippet: {
+    code: string; // API route ensures this exists
+    language: string; // API route ensures this exists
+    lineStart: number; // API route ensures this exists
+    lineEnd: number; // API route ensures this exists
+  };
+  matchScore: number; // API route ensures this exists
+  fullContent?: string; // Optional, might not be fetched or available
+  score?: number; // Original score from GitHub, might be present
+  // Note: 'sha' is not explicitly returned by our API, 'id' is preferred
 }
 
-// Our processed search result type
+
+// Our final processed search result type for the UI component
 interface SearchResult {
   id: string;
   repository: {
@@ -104,35 +111,47 @@ export default function SearchPage() {
         }
 
         // If we got here, the request was successful
+        // The API route now returns data matching the SearchResult structure,
+        // including codeSnippet and fullContent.
         
-        // Process the response data
-        const processedResults: SearchResult[] = data.results.map((item: GitHubCodeItem, index: number) => ({
-          id: item.sha || `result-${index}`,
-          repository: {
-            name: item.repository.name,
-            full_name: item.repository.full_name,
-            description: item.repository.description,
-            html_url: item.repository.html_url,
-            owner: item.repository.owner?.login || "unknown",
-            stars: item.repository.stargazers_count || 0,
-            forks: item.repository.forks_count || 0,
-            language: item.repository.language,
-          },
-          path: item.path,
-          name: item.name,
-          url: item.url,
-          html_url: item.html_url,
-          codeSnippet: {
-            code: item.text_matches?.[0]?.fragment || "// Code snippet not available",
-            language: getLanguageFromPath(item.path),
-            lineStart: 1,
-            lineEnd: (item.text_matches?.[0]?.fragment?.match(/\n/g) || []).length + 1,
-          },
-          matchScore: item.score || 0,
-        }));
+        // Ensure the results match the SearchResult type expected by SearchResultsDisplay
+        // Use the ApiSearchResultItem type for the incoming data
+        const processedResults: SearchResult[] = data.results.map((item: ApiSearchResultItem): SearchResult => { // Removed unused 'index'
+           // The API route already provides defaults, but we can keep minimal checks
+           const repo = item.repository; // Already validated in API route
+           const snippet = item.codeSnippet; // Already validated in API route
+           
+           return {
+             id: item.id, // Use the ID provided by the API
+             repository: {
+               name: repo.name,
+               full_name: repo.full_name,
+               description: repo.description,
+               html_url: repo.html_url,
+               owner: repo.owner,
+               stars: repo.stars,
+               forks: repo.forks,
+               language: repo.language,
+             },
+             path: item.path,
+             name: item.name,
+             url: item.url,
+             html_url: item.html_url, // Can be undefined, pass through
+             codeSnippet: {
+               code: snippet.code,
+               language: snippet.language,
+               lineStart: snippet.lineStart,
+               lineEnd: snippet.lineEnd,
+             },
+             matchScore: item.matchScore,
+             fullContent: item.fullContent, // Pass through fullContent (can be undefined)
+             score: item.score || item.matchScore, // Use original score or matchScore as fallback
+           };
+        });
 
         setResults(processedResults);
         setQueryTransformation(data.query);
+        
       } catch (err) {
         console.error("Search failed:", err);
         setError({
@@ -146,33 +165,7 @@ export default function SearchPage() {
     []
   );
 
-  // Helper function to determine language from file path
-  const getLanguageFromPath = (path: string): string => {
-    const extension = path.split(".").pop()?.toLowerCase();
-    
-    const languageMap: Record<string, string> = {
-      js: "javascript",
-      jsx: "javascript",
-      ts: "typescript",
-      tsx: "typescript",
-      py: "python",
-      rb: "ruby",
-      go: "go",
-      java: "java",
-      html: "html",
-      css: "css",
-      php: "php",
-      cs: "csharp",
-      cpp: "cpp",
-      c: "c",
-      swift: "swift",
-      rs: "rust",
-      kt: "kotlin",
-      scala: "scala",
-    };
-    
-    return languageMap[extension || ""] || "plaintext";
-  };
+  // Removed unused getLanguageFromPath function
 
   return (
     <div className="container mx-auto py-8">

@@ -1,26 +1,30 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MonacoCodeBlock } from "@/components/code/monaco-code-block";
-import { Button } from "@/components/ui/button";
-import { ExternalLink, FileCode, Code, GitBranch, Star } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MonacoCodeBlock } from '@/components/code/monaco-code-block';
+import { Button } from '@/components/ui/button';
+import { ExternalLink, FileCode, Code, GitBranch, Star } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+} from '@/components/ui/collapsible';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { InfoCard, InfoCardTitle, InfoCardContent } from "@/components/ui/info-card";
+} from '@/components/ui/select';
+import {
+  InfoCard,
+  InfoCardTitle,
+  InfoCardContent,
+} from '@/components/ui/info-card';
 
 // Types
 interface SearchResultRepository {
@@ -72,11 +76,11 @@ export function SearchResultsDisplay({
   query,
   isLoading = false,
   onFilterChange,
-  className = "",
+  className = '',
 }: SearchResultsDisplayProps) {
-  const [sortBy, setSortBy] = useState<string>("relevance");
-  const [languageFilter, setLanguageFilter] = useState<string>("all");
-  const [filterText, setFilterText] = useState<string>("");
+  const [sortBy, setSortBy] = useState<string>('relevance');
+  const [languageFilter, setLanguageFilter] = useState<string>('all');
+  const [filterText, setFilterText] = useState<string>('');
 
   // Apply filter and sorting to results
   const filteredResults = results
@@ -87,7 +91,7 @@ export function SearchResultsDisplay({
         const repoName = result.repository.name.toLowerCase();
         const repoFullName = result.repository.full_name.toLowerCase();
         const path = result.path.toLowerCase();
-        
+
         if (
           !repoName.includes(searchText) &&
           !repoFullName.includes(searchText) &&
@@ -98,21 +102,23 @@ export function SearchResultsDisplay({
       }
 
       // Apply language filter
-      if (languageFilter !== "all" && result.repository.language) {
-        return result.repository.language.toLowerCase() === languageFilter.toLowerCase();
+      if (languageFilter !== 'all' && result.repository.language) {
+        return (
+          result.repository.language.toLowerCase() ===
+          languageFilter.toLowerCase()
+        );
       }
-      
+
       return true;
     })
     .sort((a, b) => {
       // Apply sorting
       switch (sortBy) {
-        case "stars":
+        case 'stars':
           return b.repository.stars - a.repository.stars;
-        case "recent":
-          // For demo purposes we'll use match score as a proxy for recency
+        case 'recent':
           return b.matchScore - a.matchScore;
-        case "relevance":
+        case 'relevance':
         default:
           return b.matchScore - a.matchScore;
       }
@@ -222,7 +228,7 @@ export function SearchResultsDisplay({
         {filteredResults.length} results
         {filterText && (
           <span>
-            {" "}
+            {' '}
             for <span className="font-medium">&ldquo;{filterText}&rdquo;</span>
           </span>
         )}
@@ -279,7 +285,10 @@ function SearchResultCard({ result }: { result: SearchResultItem }) {
         <div className="text-sm text-muted-foreground mb-2 flex items-center gap-1">
           <GitBranch className="h-3 w-3" />
           <a
-            href={result.html_url || `${result.repository.html_url}/blob/master/${result.path}`}
+            href={
+              result.html_url ||
+              `${result.repository.html_url}/blob/master/${result.path}`
+            }
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-primary hover:underline transition-colors"
@@ -288,71 +297,72 @@ function SearchResultCard({ result }: { result: SearchResultItem }) {
           </a>
         </div>
 
+        {/* Restore relative positioning */}
         <div className="max-h-[200px] overflow-hidden relative">
           <MonacoCodeBlock
             code={result.codeSnippet.code}
             language={result.codeSnippet.language}
-            height={isOpen ? "auto" : "200px"}
+            height={isOpen ? 'auto' : '200px'}
           />
+          {/* Add pointer-events-none to gradient overlay */}
           {!isOpen && (
-            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none" />
           )}
         </div>
       </CardContent>
 
+      {/* Remove relative positioning from Collapsible */}
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        {/* Restore CollapsibleTrigger */}
         <CollapsibleTrigger asChild>
           <CardContent className="pt-2 pb-4 flex justify-center">
             <Button variant="ghost" size="sm" className="text-xs">
-              {isOpen ? "Show Less" : "Show More"}
+              {isOpen ? 'Show Less' : 'Show More'}
             </Button>
           </CardContent>
         </CollapsibleTrigger>
-        <CollapsibleContent>
-          <CardContent className="pt-0">
-            <Separator className="my-2" />
-            <div className="space-y-4">
-              {result.fullContent && (
-                <div>
-                  <h4 className="text-sm font-medium mb-1">Full Content</h4>
-                  <MonacoCodeBlock
-                    code={result.fullContent}
-                    language={result.codeSnippet.language}
-                    height="auto"
-                  />
-                </div>
-              )}
-
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    <Code className="h-3 w-3" />
-                    <span>{result.codeSnippet.language}</span>
-                  </Badge>
-                  <Badge
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    <Star className="h-3 w-3" />
-                    <span>{result.repository.stars}</span>
-                  </Badge>
-                </div>
-                <Button variant="outline" size="sm" className="gap-1" asChild>
-                  <a
-                    href={result.html_url || `${result.repository.html_url}/blob/master/${result.path}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    View on GitHub
-                  </a>
-                </Button>
+        <CollapsibleContent className="px-6 pb-4 pt-0">
+          {' '}
+          {/* Restore nested CardContent structure */}
+          <Separator className="my-2" />
+          <div className="space-y-4">
+            {result.fullContent && (
+              <div>
+                <h4 className="text-sm font-medium mb-1">Full Content</h4>
+                <MonacoCodeBlock
+                  code={result.fullContent}
+                  language={result.codeSnippet.language}
+                  height="auto"
+                />
               </div>
+            )}
+
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Code className="h-3 w-3" />
+                  <span>{result.codeSnippet.language}</span>
+                </Badge>
+                <Badge variant="secondary" className="flex items-center gap-1">
+                  <Star className="h-3 w-3" />
+                  <span>{result.repository.stars}</span>
+                </Badge>
+              </div>
+              <Button variant="outline" size="sm" className="gap-1" asChild>
+                <a
+                  href={
+                    result.html_url ||
+                    `${result.repository.html_url}/blob/master/${result.path}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  View on GitHub
+                </a>
+              </Button>
             </div>
-          </CardContent>
+          </div>
         </CollapsibleContent>
       </Collapsible>
     </Card>

@@ -46,8 +46,34 @@ export function MonacoCodeBlock({
       }
     };
     
+    // Define MonacoEnvironment for worker loading
+    if (typeof window !== 'undefined' && !window.MonacoEnvironment) {
+      window.MonacoEnvironment = {
+        getWorkerUrl: function (_moduleId: string, label: string) {
+          // NOTE: Assumes worker files are copied to public/monaco-workers/vs/...
+          // via next.config.mjs CopyPlugin configuration.
+          const workerBasePath = '/monaco-workers/vs';
+          if (label === 'json') {
+            return `${workerBasePath}/language/json/json.worker.js`;
+          }
+          if (label === 'css' || label === 'scss' || label === 'less') {
+            return `${workerBasePath}/language/css/css.worker.js`;
+          }
+          if (label === 'html' || label === 'handlebars' || label === 'razor') {
+            return `${workerBasePath}/language/html/html.worker.js`;
+          }
+          if (label === 'typescript' || label === 'javascript') {
+            return `${workerBasePath}/language/typescript/ts.worker.js`;
+          }
+          // Default worker
+          return `${workerBasePath}/editor/editor.worker.js`; // Adjusted default worker path
+        },
+      };
+    }
+    
     loadMonaco();
-  }, []);
+    
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   // Calculate dynamic height based on content
   const calculateHeight = () => {
@@ -103,7 +129,9 @@ export function MonacoCodeBlock({
     return () => {
       if (editor) editor.dispose();
     };
-  }, [monaco, isMounted, code, language, showLineNumbers, isDarkTheme]); // Removed 'editor' from dependencies
+    // Ensure editor is disposed on component unmount or when dependencies change significantly
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [monaco, isMounted, code, language, showLineNumbers, isDarkTheme, dynamicHeight]); // Added dynamicHeight dependency
 
   // Update theme when it changes
   useEffect(() => {
