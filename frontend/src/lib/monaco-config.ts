@@ -89,9 +89,19 @@ export function createDefaultDiffEditorOptions(options: Partial<Monaco.editor.ID
     scrollBeyondLastLine: false,
     renderSideBySide: true,
     fontSize: 14,
-    fontFamily: "'Geist Mono', monospace",
+    fontFamily: "'Geist Mono', monospace, Consolas, 'Courier New', monospace",
     lineNumbers: 'on',
-    renderOverviewRuler: false,
+    renderOverviewRuler: true,
+    enableSplitViewResizing: true,
+    ignoreTrimWhitespace: false,
+    originalEditable: false,
+    renderIndicators: true,
+    // Force diffEditor to use proper view
+    diffAlgorithm: 'advanced',
+    // Increase code visibility
+    wordWrap: 'off',
+    // Ensure the diff is displayed properly
+    accessibilityVerbose: true,
     ...options
   };
 }

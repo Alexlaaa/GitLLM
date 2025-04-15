@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import { loadMonaco, createDefaultDiffEditorOptions } from "@/lib/monaco-config";
+import { loadMonaco, createDefaultEditorOptions } from "@/lib/monaco-config";
 import type * as Monaco from "monaco-editor";
 import { Card } from "@/components/ui/card";
-import { FileIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { FileIcon, Maximize2, Minimize2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 
@@ -26,13 +27,16 @@ export function MonacoDiffViewer({
   filename = "Code Comparison",
 }: MonacoDiffViewerProps) {
   const [isMounted, setIsMounted] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [monacoInstance, setMonacoInstance] = useState<typeof Monaco | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const originalContainerRef = useRef<HTMLDivElement>(null);
+  const modifiedContainerRef = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
   const isDarkTheme = theme === "dark";
   
-  // Use refs instead of state for editor and models to avoid re-renders
-  const diffEditorRef = useRef<Monaco.editor.IStandaloneDiffEditor | null>(null);
+  // Use refs for editors and models to avoid re-renders
+  const originalEditorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
+  const modifiedEditorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null);
   const originalModelRef = useRef<Monaco.editor.ITextModel | null>(null);
   const modifiedModelRef = useRef<Monaco.editor.ITextModel | null>(null);
   const isMountedRef = useRef(true);
@@ -60,10 +64,15 @@ export function MonacoDiffViewer({
     return () => {
       isMountedRef.current = false;
       
-      // Cleanup in correct order
-      if (diffEditorRef.current) {
-        diffEditorRef.current.dispose();
-        diffEditorRef.current = null;
+      // Dispose editors and models
+      if (originalEditorRef.current) {
+        originalEditorRef.current.dispose();
+        originalEditorRef.current = null;
+      }
+      
+      if (modifiedEditorRef.current) {
+        modifiedEditorRef.current.dispose();
+        modifiedEditorRef.current = null;
       }
       
       if (originalModelRef.current) {
@@ -78,19 +87,46 @@ export function MonacoDiffViewer({
     };
   }, []);
 
-  // Set up Monaco diff editor when Monaco is loaded or props change
+  // Explicitly depend on expanded state to recreate editors when toggling
   useEffect(() => {
-    if (!monacoInstance || !containerRef.current || !isMounted) return;
+    // In expanded mode, we only need the modifiedContainerRef
+    if (!monacoInstance || !modifiedContainerRef.current || !isMounted) return;
+    if (!expanded && !originalContainerRef.current) return; // Need originalContainerRef in non-expanded mode
     
-    // Using setTimeout to ensure DOM has fully rendered before editor creation
+    // Store current code from models before disposing
+    let savedOriginalCode = originalCode;
+    let savedModifiedCode = modifiedCode;
+    
+    if (originalModelRef.current) {
+      try {
+        savedOriginalCode = originalModelRef.current.getValue();
+      } catch (e) {
+        console.error("Failed to get original editor value", e);
+      }
+    }
+    
+    if (modifiedModelRef.current) {
+      try {
+        savedModifiedCode = modifiedModelRef.current.getValue();
+      } catch (e) {
+        console.error("Failed to get modified editor value", e);
+      }
+    }
+    
+    // Using setTimeout to ensure DOM has fully rendered
     setTimeout(() => {
-      // Skip if component is no longer mounted
-      if (!isMountedRef.current || !containerRef.current) return;
+      if (!isMountedRef.current || !modifiedContainerRef.current) return;
+      if (!expanded && !originalContainerRef.current) return;
       
-      // Clean up previous instances first
-      if (diffEditorRef.current) {
-        diffEditorRef.current.dispose();
-        diffEditorRef.current = null;
+      // Clean up previous instances
+      if (originalEditorRef.current) {
+        originalEditorRef.current.dispose();
+        originalEditorRef.current = null;
+      }
+      
+      if (modifiedEditorRef.current) {
+        modifiedEditorRef.current.dispose();
+        modifiedEditorRef.current = null;
       }
       
       if (originalModelRef.current) {
@@ -104,62 +140,85 @@ export function MonacoDiffViewer({
       }
       
       try {
-        // Ensure container has proper dimensions
-        const containerWidth = containerRef.current.clientWidth;
-        const containerHeight = containerRef.current.clientHeight;
+        // Prepare safe code values
+        const safeOriginalCode = originalCode || '// No original code provided';
+        const safeModifiedCode = modifiedCode || '// No modified code provided';
         
-        // Only proceed if container has actual dimensions
-        if (containerWidth === 0 || containerHeight === 0) {
-          console.warn("Monaco container has zero dimensions, delaying initialization");
-          return;
-        }
-        
-        // Force the container to have explicit dimensions
-        containerRef.current.style.width = `${containerWidth}px`;
-        containerRef.current.style.height = height;
-        
-        // Create models for original and modified code
-        originalModelRef.current = monacoInstance.editor.createModel(originalCode, language);
-        modifiedModelRef.current = monacoInstance.editor.createModel(modifiedCode, language);
-        
-        // Create options using our utility function
-        const options = createDefaultDiffEditorOptions({
-          readOnly: true,
-          contextmenu: false,
-          diffWordWrap: 'off',
-          guides: {
-            indentation: true
-          },
-          renderSideBySide: true // Force side-by-side view
-        });
-        
-        // First set the global theme - explicitly use light theme to match the rest of the UI
+        // Set theme
         monacoInstance.editor.setTheme("vs-light");
         
-        // Create diff editor
-        diffEditorRef.current = monacoInstance.editor.createDiffEditor(containerRef.current, options);
+        // Create common editor options
+        const baseOptions = createDefaultEditorOptions({
+          readOnly: true,
+          lineNumbers: 'on',
+          scrollBeyondLastLine: false,
+          minimap: { enabled: false },
+          contextmenu: false,
+          fontSize: 14,
+          fontFamily: "'Geist Mono', monospace, Consolas, 'Courier New', monospace",
+          renderLineHighlight: 'all',
+          renderWhitespace: 'all',
+          scrollbar: { vertical: 'visible', horizontal: 'visible' },
+        });
         
-        // Only set the models if component is still mounted
-        if (isMountedRef.current && diffEditorRef.current && originalModelRef.current && modifiedModelRef.current) {
-          diffEditorRef.current.setModel({
-            original: originalModelRef.current,
-            modified: modifiedModelRef.current
+        // Create models with specific language - use saved values if available
+        originalModelRef.current = monacoInstance.editor.createModel(
+          savedOriginalCode || safeOriginalCode, 
+          language
+        );
+        
+        modifiedModelRef.current = monacoInstance.editor.createModel(
+          savedModifiedCode || safeModifiedCode, 
+          language
+        );
+        
+        // Create editors - only create original editor if not in expanded mode
+        if (!expanded && originalContainerRef.current) {
+          originalEditorRef.current = monacoInstance.editor.create(
+            originalContainerRef.current, 
+            { ...baseOptions, glyphMargin: true, model: originalModelRef.current }
+          );
+        }
+        
+        modifiedEditorRef.current = monacoInstance.editor.create(
+          modifiedContainerRef.current, 
+          { ...baseOptions, glyphMargin: true, model: modifiedModelRef.current }
+        );
+        
+        // Synchronize scrolling between editors (only if both editors exist)
+        if (!expanded && originalEditorRef.current && modifiedEditorRef.current) {
+          const originalEditor = originalEditorRef.current;
+          const modifiedEditor = modifiedEditorRef.current;
+          
+          // Sync vertical scrolling
+          originalEditor.onDidScrollChange(e => {
+            if (e.scrollTop !== undefined) {
+              modifiedEditor.setScrollTop(e.scrollTop);
+            }
           });
           
-          // Force layout update after setting models
-          diffEditorRef.current.layout();
+          modifiedEditor.onDidScrollChange(e => {
+            if (e.scrollTop !== undefined) {
+              originalEditor.setScrollTop(e.scrollTop);
+            }
+          });
         }
+        
       } catch (err) {
-        console.error("Error creating Monaco diff editor:", err);
+        console.error("Error creating Monaco editors:", err);
       }
-    }, 0); // Execute immediately after render
+    }, 0);
     
-    // Clean up function
+    // Clean up
     return () => {
-      // Clean up in correct order
-      if (diffEditorRef.current) {
-        diffEditorRef.current.dispose();
-        diffEditorRef.current = null;
+      if (originalEditorRef.current) {
+        originalEditorRef.current.dispose();
+        originalEditorRef.current = null;
+      }
+      
+      if (modifiedEditorRef.current) {
+        modifiedEditorRef.current.dispose();
+        modifiedEditorRef.current = null;
       }
       
       if (originalModelRef.current) {
@@ -198,14 +257,12 @@ export function MonacoDiffViewer({
         <div style={{ height }} className="w-full bg-muted/20 flex">
           <div className="flex-1 p-4 border-r border-border">
             <pre className="text-xs opacity-50 font-mono">
-              {originalCode.substring(0, 100)}
-              {originalCode.length > 100 ? '...' : ''}
+              {originalCode ? originalCode.substring(0, 100) + (originalCode.length > 100 ? '...' : '') : 'Loading...'}
             </pre>
           </div>
           <div className="flex-1 p-4">
             <pre className="text-xs opacity-50 font-mono">
-              {modifiedCode.substring(0, 100)}
-              {modifiedCode.length > 100 ? '...' : ''}
+              {modifiedCode ? modifiedCode.substring(0, 100) + (modifiedCode.length > 100 ? '...' : '') : 'Loading...'}
             </pre>
           </div>
         </div>
@@ -221,17 +278,43 @@ export function MonacoDiffViewer({
           <span className="text-sm font-medium">{filename}</span>
         </div>
         <div className="flex items-center space-x-4">
-          <span className="text-xs text-muted-foreground">Original</span>
-          <span className="text-xs text-muted-foreground">Modified</span>
+          {!expanded && (
+            <span className="text-xs font-medium text-blue-800">Original</span>
+          )}
+          <span className="text-xs font-medium text-blue-800">Modified</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-gray-500 hover:text-blue-600"
+            onClick={() => {
+              setExpanded(!expanded);
+              // Force re-layout on next tick after DOM updates
+              setTimeout(() => {
+                if (originalEditorRef.current) originalEditorRef.current.layout();
+                if (modifiedEditorRef.current) modifiedEditorRef.current.layout();
+              }, 0);
+            }}
+            title={expanded ? "Show both panels" : "Show only modified code"}
+          >
+            {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </Button>
         </div>
       </div>
       
-      <div 
-        ref={containerRef}
-        style={{ height }}
-        className="w-full"
-        data-testid="monaco-diff-container"
-      />
+      <div className="flex w-full" style={{ height }}>
+        {!expanded && (
+          <div 
+            ref={originalContainerRef}
+            className="w-1/2 border-r border-gray-200" 
+            data-testid="monaco-original-container"
+          />
+        )}
+        <div 
+          ref={modifiedContainerRef}
+          className={expanded ? "w-full" : "w-1/2"} 
+          data-testid="monaco-modified-container"
+        />
+      </div>
     </Card>
   );
 }

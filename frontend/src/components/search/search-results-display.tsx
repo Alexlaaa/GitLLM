@@ -159,16 +159,20 @@ export function SearchResultsDisplay({
       {/* Improved Query Transformation Section */}
       {query && (
         // Use Card for better structure and styling
-        <Card className="mb-8 border-blue-200 bg-blue-50/50 shadow-sm"> 
+        <Card className="mb-8 border-blue-200 bg-blue-50/50 shadow-sm">
           <CardHeader className="pb-3 pt-4">
-            <CardTitle className="text-lg font-semibold text-blue-900">Understanding Your Search</CardTitle>
+            <CardTitle className="text-lg font-semibold text-blue-900">
+              Understanding Your Search
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5 pb-5">
             {/* Original Query */}
             <div>
-              <h4 className="text-sm font-medium text-blue-800 mb-1.5">Your Query:</h4>
+              <h4 className="text-sm font-medium text-blue-800 mb-1.5">
+                Your Query:
+              </h4>
               {/* Use a distinct background/border for the query itself */}
-              <p className="text-base font-medium text-gray-800 bg-white p-3 rounded-md border border-gray-200 shadow-inner"> 
+              <p className="text-base font-medium text-gray-800 bg-white p-3 rounded-md border border-gray-200 shadow-inner">
                 "{query.originalQuery}"
               </p>
             </div>
@@ -176,29 +180,48 @@ export function SearchResultsDisplay({
             {/* Transformed Query & Explanation Side-by-Side */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4">
               <div>
-                <h4 className="text-sm font-medium text-blue-800 mb-1.5">Transformed to GitHub Syntax:</h4>
+                <h4 className="text-sm font-medium text-blue-800 mb-1.5">
+                  Transformed to GitHub Syntax:
+                </h4>
                 {/* Style the code block */}
-                <code className="block text-sm bg-gray-100 border border-gray-300 p-3 rounded-md font-mono overflow-x-auto text-gray-900 shadow-inner"> 
+                <code className="block text-sm bg-gray-100 border border-gray-300 p-3 rounded-md font-mono overflow-x-auto text-gray-900 shadow-inner">
                   {query.transformedQuery}
                 </code>
               </div>
-               <div>
-                 <h4 className="text-sm font-medium text-blue-800 mb-1.5">How we interpreted it:</h4>
-                  {/* Style the explanation box (removed h-full) */}
-                 <div className="text-sm text-blue-900/95 bg-white p-3 rounded-md border border-gray-200 shadow-inner space-y-3"> 
-                   <p>{query.explanation}</p>
-                   
-                   {/* Add structural context */}
-                   <div>
-                     <p className="text-xs text-gray-600 mb-1">
-                       This query uses the following structure: <code className="text-xs bg-gray-100 px-1 rounded">[Keywords] language:[language] ...</code>
-                     </p>
-                     <p className="text-xs text-gray-500">
-                       Other qualifiers like <code className="text-xs bg-gray-100 px-1 rounded">repo:</code>, <code className="text-xs bg-gray-100 px-1 rounded">user:</code>, <code className="text-xs bg-gray-100 px-1 rounded">path:</code> could also be included based on your query.
-                     </p>
-                   </div>
-                   {/* End structural context */}
-                 </div>
+              <div>
+                <h4 className="text-sm font-medium text-blue-800 mb-1.5">
+                  How we interpreted it:
+                </h4>
+                {/* Style the explanation box (removed h-full) */}
+                <div className="text-sm text-blue-900/95 bg-white p-3 rounded-md border border-gray-200 shadow-inner space-y-3">
+                  <p>{query.explanation}</p>
+
+                  {/* Add structural context */}
+                  <div>
+                    <p className="text-xs text-gray-600 mb-1">
+                      This query uses the following structure:{' '}
+                      <code className="text-xs bg-gray-100 px-1 rounded">
+                        [Keywords] language:[language] ...
+                      </code>
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Other qualifiers like{' '}
+                      <code className="text-xs bg-gray-100 px-1 rounded">
+                        repo:
+                      </code>
+                      ,{' '}
+                      <code className="text-xs bg-gray-100 px-1 rounded">
+                        user:
+                      </code>
+                      ,{' '}
+                      <code className="text-xs bg-gray-100 px-1 rounded">
+                        path:
+                      </code>{' '}
+                      could also be included based on your query.
+                    </p>
+                  </div>
+                  {/* End structural context */}
+                </div>
               </div>
             </div>
           </CardContent>
@@ -224,7 +247,8 @@ export function SearchResultsDisplay({
             <SelectContent className="bg-white text-gray-900">
               <SelectItem value="relevance">Sort by Relevance</SelectItem>
               <SelectItem value="stars">Sort by Stars</SelectItem>
-              <SelectItem value="recent">Sort by Recent</SelectItem> {/* Note: 'recent' currently uses matchScore */}
+              <SelectItem value="recent">Sort by Recent</SelectItem>{' '}
+              {/* Note: 'recent' currently uses matchScore */}
             </SelectContent>
           </Select>
           {languages.length > 0 && (
@@ -279,7 +303,8 @@ export function SearchResultsDisplay({
 
 function SearchResultCard({ result }: { result: SearchResultItem }) {
   const [isOpen, setIsOpen] = useState(false);
-  const hasCodeSnippet = result.codeSnippet?.code && result.codeSnippet.code.trim() !== '';
+  const hasCodeSnippet =
+    result.codeSnippet?.code && result.codeSnippet.code.trim() !== '';
 
   return (
     <Card className="mb-4 overflow-hidden transition-shadow duration-200 bg-white border border-gray-200 rounded-lg hover:shadow-lg">
@@ -298,7 +323,10 @@ function SearchResultCard({ result }: { result: SearchResultItem }) {
               </a>
             </CardTitle>
           </div>
-          <Badge variant="secondary" className="flex items-center gap-1 text-xs px-2 py-0.5 bg-gray-100 text-gray-700 border-gray-200">
+          <Badge
+            variant="secondary"
+            className="flex items-center gap-1 text-xs px-2 py-0.5 bg-gray-100 text-gray-700 border-gray-200"
+          >
             <Star className="h-3 w-3 text-yellow-500" />
             <span>{result.repository.stars}</span>
           </Badge>
@@ -323,12 +351,20 @@ function SearchResultCard({ result }: { result: SearchResultItem }) {
       </CardContent>
 
       {/* Code Area: Collapsible Block or Placeholder */}
-      <CardContent className="px-4 pt-0 pb-0"> {/* Adjusted padding */}
+      <CardContent className="px-4 pt-0 pb-0">
+        {' '}
+        {/* Adjusted padding */}
         {hasCodeSnippet ? (
           <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-            <div className={`relative border border-gray-200 rounded-md overflow-hidden ${isOpen ? '' : 'max-h-[200px]'}`}>
+            <div
+              className={`relative border border-gray-200 rounded-md overflow-hidden ${isOpen ? '' : 'max-h-[200px]'}`}
+            >
               <MonacoCodeBlock
-                code={isOpen && result.fullContent ? result.fullContent : result.codeSnippet.code}
+                code={
+                  isOpen && result.fullContent
+                    ? result.fullContent
+                    : result.codeSnippet.code
+                }
                 language={result.codeSnippet.language}
                 height={isOpen ? 'auto' : '200px'}
                 className="border-none"
@@ -339,12 +375,18 @@ function SearchResultCard({ result }: { result: SearchResultItem }) {
             </div>
             <CollapsibleTrigger asChild>
               <div className="pt-1 pb-2 flex justify-center border-t border-gray-100 mt-3">
-                <Button variant="ghost" size="sm" className="text-xs text-blue-600 hover:text-blue-800">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-blue-600 hover:text-blue-800"
+                >
                   {isOpen ? 'Show Less' : 'Show More'}
                 </Button>
               </div>
             </CollapsibleTrigger>
-            <CollapsibleContent className="pt-0 pb-0"> {/* Adjusted padding */}
+            <CollapsibleContent className="pt-0 pb-0">
+              {' '}
+              {/* Adjusted padding */}
               {/* Footer content moved below */}
             </CollapsibleContent>
           </Collapsible>
@@ -356,34 +398,49 @@ function SearchResultCard({ result }: { result: SearchResultItem }) {
       </CardContent>
 
       {/* Footer: Badges and Button - Always rendered below code/placeholder */}
-      <div className={`px-4 pb-4 pt-2 ${hasCodeSnippet && !isOpen ? 'border-t border-gray-100 mt-0' : ''} ${hasCodeSnippet && isOpen ? 'border-t border-gray-100 mt-0' : ''} ${!hasCodeSnippet ? 'border-t border-gray-100 mt-3' : ''}`}> {/* Conditional top border */}
-         {/* Separator only shown when code is present and expanded */}
-         {hasCodeSnippet && isOpen && <Separator className="mb-3 bg-gray-200" />}
-         <div className="flex justify-between items-center pt-1">
-           <div className="flex items-center gap-2">
-             {/* Display language badge if available */}
-             {result.codeSnippet?.language && (
-               <Badge variant="secondary" className="flex items-center gap-1 text-xs px-2 py-0.5 bg-gray-100 text-gray-700 border-gray-200">
-                 <Code className="h-3 w-3" />
-                 <span>{result.codeSnippet.language}</span>
-               </Badge>
-             )}
-             <Badge variant="secondary" className="flex items-center gap-1 text-xs px-2 py-0.5 bg-gray-100 text-gray-700 border-gray-200">
-               <Star className="h-3 w-3 text-yellow-500" />
-               <span>{result.repository.stars}</span>
-             </Badge>
-           </div>
-           <Button variant="outline" size="sm" className="gap-1 text-xs h-8 border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus-visible:ring-ring" asChild>
-             <a
-               href={result.html_url || result.repository.html_url}
-               target="_blank"
-               rel="noopener noreferrer"
-             >
-               <ExternalLink className="h-3 w-3" />
-               View on GitHub
-             </a>
-           </Button>
-         </div>
+      <div
+        className={`px-4 pb-4 pt-2 ${hasCodeSnippet && !isOpen ? 'border-t border-gray-100 mt-0' : ''} ${hasCodeSnippet && isOpen ? 'border-t border-gray-100 mt-0' : ''} ${!hasCodeSnippet ? 'border-t border-gray-100 mt-3' : ''}`}
+      >
+        {' '}
+        {/* Conditional top border */}
+        {/* Separator only shown when code is present and expanded */}
+        {hasCodeSnippet && isOpen && <Separator className="mb-3 bg-gray-200" />}
+        <div className="flex justify-between items-center pt-1">
+          <div className="flex items-center gap-2">
+            {/* Display language badge if available */}
+            {result.codeSnippet?.language && (
+              <Badge
+                variant="secondary"
+                className="flex items-center gap-1 text-xs px-2 py-0.5 bg-gray-100 text-gray-700 border-gray-200"
+              >
+                <Code className="h-3 w-3" />
+                <span>{result.codeSnippet.language}</span>
+              </Badge>
+            )}
+            <Badge
+              variant="secondary"
+              className="flex items-center gap-1 text-xs px-2 py-0.5 bg-gray-100 text-gray-700 border-gray-200"
+            >
+              <Star className="h-3 w-3 text-yellow-500" />
+              <span>{result.repository.stars}</span>
+            </Badge>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1 text-xs h-8 border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus-visible:ring-ring"
+            asChild
+          >
+            <a
+              href={result.html_url || result.repository.html_url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <ExternalLink className="h-3 w-3" />
+              View on GitHub
+            </a>
+          </Button>
+        </div>
       </div>
     </Card>
   );

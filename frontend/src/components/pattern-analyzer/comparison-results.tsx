@@ -51,14 +51,14 @@ export default function ComparisonResults({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-gray-800">
-      {/* Similar implementations list */}
-      <Card className="p-4 lg:col-span-1 bg-white">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 text-gray-800">
+      {/* Similar implementations list - reduced width */}
+      <Card className="p-4 lg:col-span-1 bg-white h-full flex flex-col">
         <h3 className="text-lg font-semibold mb-4 text-gray-800">
           Similar Implementations
         </h3>
 
-        <ScrollArea className="h-[660px] pr-3">
+        <ScrollArea className="pr-3 mb-2 h-[775px]">
           <div className="space-y-4">
             {results.map((result) => (
               <Card
@@ -130,8 +130,8 @@ export default function ComparisonResults({
         </ScrollArea>
       </Card>
 
-      {/* Code comparison and analysis */}
-      <div className="lg:col-span-2 space-y-6">
+      {/* Code comparison and analysis - expanded width */}
+      <div className="lg:col-span-3 space-y-6">
         {currentResult && (
           <>
             <Card className="p-4 bg-white">
@@ -175,7 +175,7 @@ export default function ComparisonResults({
                     originalCode={originalCode}
                     modifiedCode={currentResult.codeContent}
                     language={detectLanguage(currentResult.name)}
-                    height="400px"
+                    height="500px"
                     filename={currentResult.name}
                   />
                 </TabsContent>
