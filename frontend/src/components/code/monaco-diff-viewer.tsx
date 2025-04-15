@@ -82,53 +82,77 @@ export function MonacoDiffViewer({
   useEffect(() => {
     if (!monacoInstance || !containerRef.current || !isMounted) return;
     
-    // Clean up previous instances first
-    if (diffEditorRef.current) {
-      diffEditorRef.current.dispose();
-      diffEditorRef.current = null;
-    }
-    
-    if (originalModelRef.current) {
-      originalModelRef.current.dispose();
-      originalModelRef.current = null;
-    }
-    
-    if (modifiedModelRef.current) {
-      modifiedModelRef.current.dispose();
-      modifiedModelRef.current = null;
-    }
-    
-    // Double check container ref exists and component is still mounted
-    if (!containerRef.current || !isMountedRef.current) return;
-    
-    try {
-      // Create models for original and modified code
-      originalModelRef.current = monacoInstance.editor.createModel(originalCode, language);
-      modifiedModelRef.current = monacoInstance.editor.createModel(modifiedCode, language);
+    // Using setTimeout to ensure DOM has fully rendered before editor creation
+    setTimeout(() => {
+      // Skip if component is no longer mounted
+      if (!isMountedRef.current || !containerRef.current) return;
       
-      // Create options using our utility function
-      const options = createDefaultDiffEditorOptions({
-        readOnly: true,
-        contextmenu: false,
-        diffWordWrap: 'off',
-        guides: {
-          indentation: true
-        }
-      });
-      
-      // Create diff editor
-      diffEditorRef.current = monacoInstance.editor.createDiffEditor(containerRef.current, options);
-      
-      // Only set the models if component is still mounted
-      if (isMountedRef.current && diffEditorRef.current && originalModelRef.current && modifiedModelRef.current) {
-        diffEditorRef.current.setModel({
-          original: originalModelRef.current,
-          modified: modifiedModelRef.current,
-        });
+      // Clean up previous instances first
+      if (diffEditorRef.current) {
+        diffEditorRef.current.dispose();
+        diffEditorRef.current = null;
       }
-    } catch (err) {
-      console.error("Error creating Monaco diff editor:", err);
-    }
+      
+      if (originalModelRef.current) {
+        originalModelRef.current.dispose();
+        originalModelRef.current = null;
+      }
+      
+      if (modifiedModelRef.current) {
+        modifiedModelRef.current.dispose();
+        modifiedModelRef.current = null;
+      }
+      
+      try {
+        // Ensure container has proper dimensions
+        const containerWidth = containerRef.current.clientWidth;
+        const containerHeight = containerRef.current.clientHeight;
+        
+        // Only proceed if container has actual dimensions
+        if (containerWidth === 0 || containerHeight === 0) {
+          console.warn("Monaco container has zero dimensions, delaying initialization");
+          return;
+        }
+        
+        // Force the container to have explicit dimensions
+        containerRef.current.style.width = `${containerWidth}px`;
+        containerRef.current.style.height = height;
+        
+        // Create models for original and modified code
+        originalModelRef.current = monacoInstance.editor.createModel(originalCode, language);
+        modifiedModelRef.current = monacoInstance.editor.createModel(modifiedCode, language);
+        
+        // Create options using our utility function
+        const options = createDefaultDiffEditorOptions({
+          readOnly: true,
+          contextmenu: false,
+          diffWordWrap: 'off',
+          guides: {
+            indentation: true
+          },
+          renderSideBySide: true // Force side-by-side view
+        });
+        
+        // First set the global theme - explicitly use light theme to match the rest of the UI
+        monacoInstance.editor.setTheme("vs-light");
+        
+        // Create diff editor
+        diffEditorRef.current = monacoInstance.editor.createDiffEditor(containerRef.current, options);
+        
+        // Only set the models if component is still mounted
+        if (isMountedRef.current && diffEditorRef.current && originalModelRef.current && modifiedModelRef.current) {
+          diffEditorRef.current.setModel({
+            original: originalModelRef.current,
+            modified: modifiedModelRef.current
+          });
+          
+          // Force layout update after setting models
+          diffEditorRef.current.layout();
+        }
+      } catch (err) {
+        console.error("Error creating Monaco diff editor:", err);
+      }
+    }, 0); // Execute immediately after render
     
     // Clean up function
     return () => {
@@ -148,7 +172,7 @@ export function MonacoDiffViewer({
         modifiedModelRef.current = null;
       }
     };
-  }, [monacoInstance, isMounted, originalCode, modifiedCode, language, isDarkTheme]);
+  }, [monacoInstance, isMounted, originalCode, modifiedCode, language, isDarkTheme, height]);
 
   // Update theme when it changes
   useEffect(() => {
