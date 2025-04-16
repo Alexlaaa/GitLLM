@@ -21,6 +21,7 @@ import { CodePattern } from './pattern-analyzer-interface';
 interface CodePatternInputProps {
   onSubmit: (pattern: CodePattern) => void;
   isLoading: boolean;
+  initialPattern?: CodePattern; // Add prop for initial values
 }
 
 // List of programming languages to choose from
@@ -43,12 +44,14 @@ const LANGUAGES = [
 export default function CodePatternInput({
   onSubmit,
   isLoading,
+  initialPattern,
 }: CodePatternInputProps) {
-  const [code, setCode] = useState('');
-  const [language, setLanguage] = useState('');
+  // Initialize state with values from initialPattern if provided
+  const [code, setCode] = useState(initialPattern?.code || '');
+  const [language, setLanguage] = useState(initialPattern?.language || '');
   const [showFilters, setShowFilters] = useState(false);
-  const [repoFilter, setRepoFilter] = useState('');
-  const [userFilter, setUserFilter] = useState('');
+  const [repoFilter, setRepoFilter] = useState(initialPattern?.filters.repoFilter || '');
+  const [userFilter, setUserFilter] = useState(initialPattern?.filters.userFilter || '');
 
   const handleSubmit = () => {
     if (!code.trim()) return;

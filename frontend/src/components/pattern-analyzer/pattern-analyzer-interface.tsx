@@ -124,7 +124,11 @@ export default function PatternAnalyzerInterface() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="input" className="space-y-4 mt-4 w-full">
-          <CodePatternInput onSubmit={handlePatternSubmit} isLoading={isLoading} />
+          <CodePatternInput 
+            onSubmit={handlePatternSubmit} 
+            isLoading={isLoading} 
+            initialPattern={codePattern}
+          />
         </TabsContent>
         <TabsContent value="results" className="space-y-4 mt-4 w-full">
           {isLoading ? (
