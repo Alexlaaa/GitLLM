@@ -50,8 +50,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="relative min-h-screen bg-background flex flex-col">
-            <NavBar items={navItems} />
+          <div className="relative min-h-screen bg-slate-50 flex flex-col">
+            <div className="sticky top-0 z-50 w-full">
+              <NavBar items={navItems} />
+            </div>
             <main className="flex-grow">{children}</main>
           </div>
         </ThemeProvider>
