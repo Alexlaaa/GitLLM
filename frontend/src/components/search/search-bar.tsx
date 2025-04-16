@@ -3,7 +3,6 @@
 import { useId, useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search } from 'lucide-react';
 
 interface SearchBarProps {
   placeholder?: string;
@@ -49,7 +48,7 @@ const SearchBar = ({
           <Input
             id={id}
             ref={inputRef}
-            className="peer pr-9 pl-12 h-12 text-gray-900 rounded-lg border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 shadow-sm" 
+            className="peer pr-9 pl-4 h-12 text-gray-900 rounded-lg border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 shadow-sm" 
             placeholder={placeholder}
             type="search"
             value={query}
@@ -58,9 +57,7 @@ const SearchBar = ({
             autoFocus={autoFocus}
             disabled={isLoading}
           />
-          <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-4 text-gray-500 peer-disabled:opacity-50">
-            <Search className="h-5 w-5 text-indigo-500" aria-hidden="true" />
-          </div>
+          {/* Removed the search icon */}
         </div>
         <Button
           type="submit"

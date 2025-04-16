@@ -19,12 +19,10 @@ const navItems = [
   {
     name: 'Search',
     url: '/search',
-    iconName: 'search',
   },
   {
     name: 'Pattern Analyzer',
     url: '/pattern-analyzer',
-    iconName: 'cog',
   },
 ];
 

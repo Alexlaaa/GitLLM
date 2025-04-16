@@ -3,20 +3,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import {
-  Circle,
-  Search,
-  Cog,
-  FileCode,
-  Settings,
-  LayoutGrid,
-} from 'lucide-react';
+// No longer need icons as we're only showing text
 import { cn } from '@/lib/utils';
 
 interface NavItem {
   name: string;
   url: string;
-  iconName: string;
 }
 
 interface NavBarProps {
@@ -27,26 +19,7 @@ interface NavBarProps {
 export function NavBar({ items, className }: NavBarProps) {
   const [activeTab, setActiveTab] = useState(items[0].name);
 
-  // Helper function to render icons by name
-  const renderIcon = (iconName: string) => {
-    // Map icon names to components
-    switch (iconName.toLowerCase()) {
-      case 'search':
-        return <Search size={18} strokeWidth={2.5} />;
-      case 'cog':
-        return <Cog size={18} strokeWidth={2.5} />;
-      case 'file-code':
-      case 'filecode':
-        return <FileCode size={18} strokeWidth={2.5} />;
-      case 'settings':
-        return <Settings size={18} strokeWidth={2.5} />;
-      case 'layout':
-      case 'grid':
-        return <LayoutGrid size={18} strokeWidth={2.5} />;
-      default:
-        return <Circle size={18} strokeWidth={2.5} />;
-    }
-  };
+  // Icon rendering no longer needed
 
   return (
     <div className={cn('flex justify-center w-full', className)}>
@@ -66,8 +39,7 @@ export function NavBar({ items, className }: NavBarProps) {
                 isActive && 'bg-white/20 text-white'
               )}
             >
-              <span className="hidden md:inline">{item.name}</span>
-              <span className="md:hidden">{renderIcon(item.iconName)}</span>
+              <span>{item.name}</span>
               {isActive && (
                 <motion.div
                   layoutId="lamp"

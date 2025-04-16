@@ -234,13 +234,8 @@ export function SearchResultsDisplay({
               placeholder="Filter results by name or path..."
               value={filterText}
               onChange={(e) => handleFilterChange(e.target.value)}
-              className="w-full h-12 text-gray-900 pl-12 rounded-lg border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 shadow-sm"
+              className="w-full h-12 text-gray-900 pl-4 rounded-lg border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 shadow-sm"
             />
-            <div className="pointer-events-none absolute inset-y-4 start-4 flex items-center justify-center ps-4 text-gray-500">
-              <svg className="h-5 w-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
           </div>
           <div className="flex gap-2">
             <Select value={sortBy} onValueChange={setSortBy}>
