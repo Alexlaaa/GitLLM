@@ -3,7 +3,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { loadMonaco, createDefaultEditorOptions } from "@/lib/monaco-config";
 import type * as Monaco from "monaco-editor";
-import { useTheme } from "next-themes";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, Check, FileIcon } from "lucide-react";
@@ -36,6 +35,14 @@ const SUPPORTED_LANGUAGES = [
   { value: "python", label: "Python" },
   { value: "rust", label: "Rust" },
   { value: "go", label: "Go" },
+  { value: "java", label: "Java" },
+  { value: "c", label: "C" },
+  { value: "cpp", label: "C++" },
+  { value: "csharp", label: "C#" },
+  { value: "ruby", label: "Ruby" },
+  { value: "php", label: "PHP" },
+  { value: "swift", label: "Swift" },
+  { value: "kotlin", label: "Kotlin" },
 ];
 
 export function MonacoEditor({
@@ -51,8 +58,6 @@ export function MonacoEditor({
   const [monacoInstance, setMonacoInstance] = useState<typeof Monaco | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState(language);
   const [copied, setCopied] = useState(false);
-  const { theme } = useTheme();
-  const isDarkTheme = theme === "dark";
 
   // Initialize Monaco
   useEffect(() => {
