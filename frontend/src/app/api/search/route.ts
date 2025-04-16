@@ -308,6 +308,50 @@ export async function POST(request: NextRequest) {
               .split('\n')
               .slice(0, 10)
               .join('\n');
+              
+            // Determine language based on file extension
+            const getLanguageFromPath = (path: string): string => {
+              // Extract file extension
+              const ext = path.split('.').pop()?.toLowerCase();
+              
+              // Map file extensions to languages (add more as needed)
+              const extensionMap: {[key: string]: string} = {
+                'js': 'javascript',
+                'jsx': 'jsx',
+                'ts': 'typescript',
+                'tsx': 'tsx',
+                'py': 'python',
+                'java': 'java',
+                'rb': 'ruby',
+                'php': 'php',
+                'go': 'go',
+                'rs': 'rust',
+                'c': 'c',
+                'cpp': 'cpp',
+                'cc': 'cpp',
+                'h': 'c',
+                'hpp': 'cpp',
+                'cs': 'csharp',
+                'swift': 'swift',
+                'kt': 'kotlin',
+                'html': 'html',
+                'css': 'css',
+                'scss': 'scss',
+                'sass': 'sass',
+                'json': 'json',
+                'xml': 'xml',
+                'md': 'markdown',
+                'sh': 'shell',
+                'bash': 'shell',
+                'yml': 'yaml',
+                'yaml': 'yaml'
+              };
+              
+              return ext && extensionMap[ext] ? extensionMap[ext] : (item.repository.language?.toLowerCase() || 'plaintext');
+            };
+            
+            const fileLanguage = getLanguageFromPath(item.path);
+            
             return {
               /* ... return item with content ... */ id: item.sha || item.url,
               repository: {
@@ -326,7 +370,7 @@ export async function POST(request: NextRequest) {
               html_url: item.html_url,
               codeSnippet: {
                 code: snippetLines || '// Snippet unavailable',
-                language: item.repository.language || 'plaintext',
+                language: fileLanguage,
                 lineStart: 1,
                 lineEnd: snippetLines.split('\n').length,
               },
@@ -371,33 +415,78 @@ export async function POST(request: NextRequest) {
           }
         });
 
+      // Helper function to determine language from path
+      const getLanguageFromPath = (path: string): string => {
+        // Extract file extension
+        const ext = path.split('.').pop()?.toLowerCase();
+        
+        // Map file extensions to languages
+        const extensionMap: {[key: string]: string} = {
+          'js': 'javascript',
+          'jsx': 'jsx',
+          'ts': 'typescript',
+          'tsx': 'tsx',
+          'py': 'python',
+          'java': 'java',
+          'rb': 'ruby',
+          'php': 'php',
+          'go': 'go',
+          'rs': 'rust',
+          'c': 'c',
+          'cpp': 'cpp',
+          'cc': 'cpp',
+          'h': 'c',
+          'hpp': 'cpp',
+          'cs': 'csharp',
+          'swift': 'swift',
+          'kt': 'kotlin',
+          'html': 'html',
+          'css': 'css',
+          'scss': 'scss',
+          'sass': 'sass',
+          'json': 'json',
+          'xml': 'xml',
+          'md': 'markdown',
+          'sh': 'shell',
+          'bash': 'shell',
+          'yml': 'yaml',
+          'yaml': 'yaml'
+        };
+        
+        return ext && extensionMap[ext] ? extensionMap[ext] : (path.includes('/') ? 'plaintext' : (path.toLowerCase() || 'plaintext'));
+      };
+
       const remainingItems = searchData.items
         .slice(MAX_CONTENT_FETCHES)
-        .map((item: GitHubCodeSearchItem) => ({
-          /* ... map remaining items ... */ id: item.sha || item.url,
-          repository: {
-            name: item.repository.name,
-            full_name: item.repository.full_name,
-            description: item.repository.description,
-            html_url: item.repository.html_url,
-            owner: item.repository.owner.login,
-            stars: item.repository.stargazers_count || 0,
-            forks: item.repository.forks_count || 0,
-            language: item.repository.language,
-          },
-          path: item.path,
-          name: item.name,
-          url: item.url,
-          html_url: item.html_url,
-          codeSnippet: {
-            code: '// Snippet not fetched (limit reached)',
-            language: item.repository.language || 'plaintext',
-            lineStart: 1,
-            lineEnd: 1,
-          },
-          matchScore: item.score || 0,
-          fullContent: '// Content not fetched (limit reached)',
-        }));
+        .map((item: GitHubCodeSearchItem) => {
+          const fileLanguage = getLanguageFromPath(item.path);
+          
+          return {
+            id: item.sha || item.url,
+            repository: {
+              name: item.repository.name,
+              full_name: item.repository.full_name,
+              description: item.repository.description,
+              html_url: item.repository.html_url,
+              owner: item.repository.owner.login,
+              stars: item.repository.stargazers_count || 0,
+              forks: item.repository.forks_count || 0,
+              language: item.repository.language,
+            },
+            path: item.path,
+            name: item.name,
+            url: item.url,
+            html_url: item.html_url,
+            codeSnippet: {
+              code: '// Snippet not fetched (limit reached)',
+              language: fileLanguage,
+              lineStart: 1,
+              lineEnd: 1,
+            },
+            matchScore: item.score || 0,
+            fullContent: '// Content not fetched (limit reached)',
+          };
+        });
 
       finalResults = [
         ...(await Promise.all(contentFetchPromises)),
