@@ -4,10 +4,8 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MonacoCodeBlock } from '@/components/code/monaco-code-block';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, FileCode, Code, GitBranch, Star } from 'lucide-react';
+import { ExternalLink, FileCode, GitBranch } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import {
   Collapsible,
   CollapsibleContent,
@@ -20,11 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  InfoCard,
-  InfoCardTitle,
-  InfoCardContent,
-} from '@/components/ui/info-card';
 
 // Types
 interface SearchResultRepository {
@@ -143,84 +136,89 @@ export function SearchResultsDisplay({
 
   if (isLoading) {
     return (
-      <div className="animate-pulse space-y-4 w-full max-w-5xl mx-auto">
-        <div className="h-10 bg-muted rounded w-full max-w-md"></div>
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="rounded-xl border border-border h-40"></div>
-          ))}
+      <div className="w-full flex flex-col items-center justify-center py-20">
+        <div className="bg-gradient-to-r from-indigo-100 to-blue-100 p-6 rounded-full mb-6">
+          <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
+        <h3 className="text-xl font-medium text-gray-800 mb-2">Searching GitHub...</h3>
+        <p className="text-gray-600">Finding the best code matches for your query</p>
       </div>
     );
   }
 
   return (
     <div className={`w-full ${className}`}>
-      {/* Improved Query Transformation Section */}
+      {/* Enhanced Query Transformation Section with gradient styling */}
       {query && (
-        // Use Card for better structure and styling
-        <Card className="mb-8 border-blue-200 bg-blue-50/50 shadow-sm">
-          <CardHeader className="pb-3 pt-4">
-            <CardTitle className="text-lg font-semibold text-blue-900">
+        <Card className="mb-8 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-xl shadow-md">
+          <CardHeader className="pb-3 pt-5">
+            <CardTitle className="text-xl font-semibold text-indigo-800 flex items-center">
+              <svg className="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
               Understanding Your Search
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-5 pb-5">
+          <CardContent className="space-y-5 pb-6">
             {/* Original Query */}
             <div>
-              <h4 className="text-sm font-medium text-blue-800 mb-1.5">
+              <h4 className="text-sm font-medium text-indigo-800 mb-2 flex items-center">
+                <svg className="w-4 h-4 mr-1.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
                 Your Query:
               </h4>
-              {/* Use a distinct background/border for the query itself */}
-              <p className="text-base font-medium text-gray-800 bg-white p-3 rounded-md border border-gray-200 shadow-inner">
-                "{query.originalQuery}"
+              <p className="text-base font-medium text-gray-800 bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                &ldquo;{query.originalQuery}&rdquo;
               </p>
             </div>
 
             {/* Transformed Query & Explanation Side-by-Side */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4">
               <div>
-                <h4 className="text-sm font-medium text-blue-800 mb-1.5">
+                <h4 className="text-sm font-medium text-indigo-800 mb-2 flex items-center">
+                  <svg className="w-4 h-4 mr-1.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                  </svg>
                   Transformed to GitHub Syntax:
                 </h4>
-                {/* Style the code block */}
-                <code className="block text-sm bg-gray-100 border border-gray-300 p-3 rounded-md font-mono overflow-x-auto text-gray-900 shadow-inner">
+                <code className="block text-sm bg-gray-800 text-gray-100 p-4 rounded-lg font-mono overflow-x-auto shadow-inner">
                   {query.transformedQuery}
                 </code>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-blue-800 mb-1.5">
+                <h4 className="text-sm font-medium text-indigo-800 mb-2 flex items-center">
+                  <svg className="w-4 h-4 mr-1.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
                   How we interpreted it:
                 </h4>
-                {/* Style the explanation box (removed h-full) */}
-                <div className="text-sm text-blue-900/95 bg-white p-3 rounded-md border border-gray-200 shadow-inner space-y-3">
+                <div className="text-sm text-blue-900 bg-white p-4 rounded-lg border border-gray-200 shadow-sm space-y-3">
                   <p>{query.explanation}</p>
 
-                  {/* Add structural context */}
-                  <div>
+                  <div className="mt-3 pt-3 border-t border-gray-100">
                     <p className="text-xs text-gray-600 mb-1">
                       This query uses the following structure:{' '}
-                      <code className="text-xs bg-gray-100 px-1 rounded">
+                      <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">
                         [Keywords] language:[language] ...
                       </code>
                     </p>
                     <p className="text-xs text-gray-500">
                       Other qualifiers like{' '}
-                      <code className="text-xs bg-gray-100 px-1 rounded">
+                      <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">
                         repo:
                       </code>
                       ,{' '}
-                      <code className="text-xs bg-gray-100 px-1 rounded">
+                      <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">
                         user:
                       </code>
                       ,{' '}
-                      <code className="text-xs bg-gray-100 px-1 rounded">
+                      <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">
                         path:
                       </code>{' '}
                       could also be included based on your query.
                     </p>
                   </div>
-                  {/* End structural context */}
                 </div>
               </div>
             </div>
@@ -228,72 +226,85 @@ export function SearchResultsDisplay({
         </Card>
       )}
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="flex-1">
-          <Input
-            placeholder="Filter results..."
-            value={filterText}
-            onChange={(e) => handleFilterChange(e.target.value)}
-            className="w-full text-gray-900" // Added text color
-          />
-        </div>
-        <div className="flex gap-2">
-          {/* Added light theme classes to SelectTrigger and SelectContent */}
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[180px] bg-white text-gray-900 border-gray-300">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent className="bg-white text-gray-900">
-              <SelectItem value="relevance">Sort by Relevance</SelectItem>
-              <SelectItem value="stars">Sort by Stars</SelectItem>
-              <SelectItem value="recent">Sort by Recent</SelectItem>{' '}
-              {/* Note: 'recent' currently uses matchScore */}
-            </SelectContent>
-          </Select>
-          {languages.length > 0 && (
-            /* Added light theme classes to SelectTrigger and SelectContent */
-            <Select value={languageFilter} onValueChange={setLanguageFilter}>
-              <SelectTrigger className="w-[150px] bg-white text-gray-900 border-gray-300">
-                <SelectValue placeholder="Language" />
+      {/* Enhanced Filters with gradient card styling */}
+      <Card className="mb-6 rounded-xl border border-gray-200 bg-white shadow-sm p-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <Input
+              placeholder="Filter results by name or path..."
+              value={filterText}
+              onChange={(e) => handleFilterChange(e.target.value)}
+              className="w-full h-12 text-gray-900 pl-12 rounded-lg border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 shadow-sm"
+            />
+            <div className="pointer-events-none absolute inset-y-4 start-4 flex items-center justify-center ps-4 text-gray-500">
+              <svg className="h-5 w-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-[180px] h-12 bg-white text-gray-900 border-gray-200 rounded-lg shadow-sm">
+                <SelectValue placeholder="Sort by" />
               </SelectTrigger>
-              <SelectContent className="bg-white text-gray-900">
-                <SelectItem value="all">All Languages</SelectItem>
-                {languages.map((lang) => (
-                  <SelectItem key={lang} value={lang}>
-                    {lang}
-                  </SelectItem>
-                ))}
+              <SelectContent className="bg-white text-gray-900 border-gray-200">
+                <SelectItem value="relevance">Sort by Relevance</SelectItem>
+                <SelectItem value="stars">Sort by Stars</SelectItem>
+                <SelectItem value="recent">Sort by Recent</SelectItem>
               </SelectContent>
             </Select>
-          )}
+            {languages.length > 0 && (
+              <Select value={languageFilter} onValueChange={setLanguageFilter}>
+                <SelectTrigger className="w-[150px] h-12 bg-white text-gray-900 border-gray-200 rounded-lg shadow-sm">
+                  <SelectValue placeholder="Language" />
+                </SelectTrigger>
+                <SelectContent className="bg-white text-gray-900 border-gray-200">
+                  <SelectItem value="all">All Languages</SelectItem>
+                  {languages.map((lang) => (
+                    <SelectItem key={lang} value={lang}>
+                      {lang}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </div>
-      </div>
-
-      {/* Results Count */}
-      <div className="mb-4 text-sm text-muted-foreground">
-        {filteredResults.length} results
-        {filterText && (
+        
+        {/* Results Count with improved styling */}
+        <div className="mt-4 text-sm text-gray-600 flex items-center">
+          <svg className="h-4 w-4 mr-1.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
           <span>
-            {' '}
-            for <span className="font-medium">&ldquo;{filterText}&rdquo;</span>
+            {filteredResults.length} results
+            {filterText && (
+              <span>
+                {' '}
+                for <span className="font-medium">&ldquo;{filterText}&rdquo;</span>
+              </span>
+            )}
           </span>
-        )}
-      </div>
+        </div>
+      </Card>
 
-      {/* Results List */}
-      <div className="space-y-4">
+      {/* Enhanced Results List */}
+      <div className="space-y-5">
         {filteredResults.length > 0 ? (
           filteredResults.map((result) => (
             <SearchResultCard key={result.id} result={result} />
           ))
         ) : (
-          <div className="text-center py-12">
-            <FileCode className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-medium">No results found</h3>
-            <p className="text-muted-foreground mt-2">
-              Try adjusting your search or filters
-            </p>
+          <div className="text-center py-16 px-6 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl shadow-md border border-indigo-100">
+            <div className="flex flex-col items-center text-center">
+              <div className="bg-gradient-to-r from-indigo-100 to-blue-100 p-4 rounded-full mb-6">
+                <FileCode className="h-12 w-12 text-indigo-500" />
+              </div>
+              <h3 className="text-xl font-medium text-gray-800 mb-3">No results found</h3>
+              <p className="text-gray-600 mt-2">
+                Try adjusting your search terms or filters
+              </p>
+            </div>
           </div>
         )}
       </div>
@@ -307,57 +318,65 @@ function SearchResultCard({ result }: { result: SearchResultItem }) {
     result.codeSnippet?.code && result.codeSnippet.code.trim() !== '';
 
   return (
-    <Card className="mb-4 overflow-hidden transition-shadow duration-200 bg-white border border-gray-200 rounded-lg hover:shadow-lg">
-      <CardHeader className="p-4 pb-2">
-        <div className="flex justify-between items-start gap-4">
-          <div className="flex items-center gap-2 min-w-0">
-            <FileCode className="h-5 w-5 text-gray-500 flex-shrink-0" />
-            <CardTitle className="text-base font-medium text-gray-800 truncate">
+    <Card className="mb-5 overflow-hidden transition-all duration-200 bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-100">
+      {/* Header with repository info */}
+      <CardHeader className="p-0 border-b border-gray-100 overflow-hidden">
+        {/* Repository header with gradient background */}
+        <div className="bg-gradient-to-r from-indigo-600 to-blue-600 px-5 py-3 text-white">
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-base font-medium truncate flex items-center">
+              <FileCode className="h-4 w-4 mr-2 text-indigo-200" />
               <a
                 href={result.repository.html_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-blue-600 hover:underline transition-colors"
+                className="hover:text-white/90 transition-colors"
               >
                 {result.repository.full_name}
               </a>
             </CardTitle>
+            <div className="flex shrink-0 ml-2">
+              <div className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-800/40 text-xs font-medium text-white backdrop-blur-sm shadow-sm border border-indigo-400/20">
+                <svg className="h-3.5 w-3.5 text-amber-300 mr-1.5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27z" />
+                </svg>
+                <span>{result.repository.stars.toLocaleString()}</span>
+              </div>
+            </div>
           </div>
-          <Badge
-            variant="secondary"
-            className="flex items-center gap-1 text-xs px-2 py-0.5 bg-gray-100 text-gray-700 border-gray-200"
-          >
-            <Star className="h-3 w-3 text-yellow-500" />
-            <span>{result.repository.stars}</span>
-          </Badge>
+        </div>
+        
+        {/* File path with elegant design */}
+        <div className="px-5 py-3 flex items-center gap-2 bg-gradient-to-r from-gray-50 to-white">
+          <div className="bg-indigo-50 rounded-full p-1.5 flex-shrink-0">
+            <GitBranch className="h-3.5 w-3.5 text-indigo-500" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <a
+              href={
+                result.html_url ||
+                `${result.repository.html_url}/blob/master/${result.path}`
+              }
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-medium text-gray-700 hover:text-indigo-600 hover:underline transition-colors truncate block"
+            >
+              {result.path.split('/').map((part, i, arr) => 
+                i === arr.length - 1 ? 
+                <span key={i} className="font-semibold text-indigo-700">{part}</span> : 
+                <span key={i}>{part}<span className="text-gray-400 mx-0.5">/</span></span>
+              )}
+            </a>
+          </div>
         </div>
       </CardHeader>
 
-      <CardContent className="px-4 pb-0">
-        <div className="text-xs text-gray-600 mb-3 flex items-center gap-1.5">
-          <GitBranch className="h-3.5 w-3.5" />
-          <a
-            href={
-              result.html_url ||
-              `${result.repository.html_url}/blob/master/${result.path}`
-            }
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-blue-600 hover:underline transition-colors truncate"
-          >
-            {result.path}
-          </a>
-        </div>
-      </CardContent>
-
       {/* Code Area: Collapsible Block or Placeholder */}
-      <CardContent className="px-4 pt-0 pb-0">
-        {' '}
-        {/* Adjusted padding */}
+      <CardContent className="p-0">
         {hasCodeSnippet ? (
           <Collapsible open={isOpen} onOpenChange={setIsOpen}>
             <div
-              className={`relative border border-gray-200 rounded-md overflow-hidden ${isOpen ? '' : 'max-h-[200px]'}`}
+              className={`relative overflow-hidden ${isOpen ? '' : 'max-h-[200px]'}`}
             >
               <MonacoCodeBlock
                 code={
@@ -367,80 +386,57 @@ function SearchResultCard({ result }: { result: SearchResultItem }) {
                 }
                 language={result.codeSnippet.language}
                 height={isOpen ? 'auto' : '200px'}
-                className="border-none"
+                className="border-none rounded-none"
               />
               {!isOpen && (
-                <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-gray-50 to-transparent pointer-events-none" />
               )}
             </div>
-            <CollapsibleTrigger asChild>
-              <div className="pt-1 pb-2 flex justify-center border-t border-gray-100 mt-3">
+            <div className="flex justify-center py-2.5 bg-gray-50 border-t border-gray-100">
+              <CollapsibleTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-xs text-blue-600 hover:text-blue-800"
+                  className="text-xs text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-full px-4"
                 >
-                  {isOpen ? 'Show Less' : 'Show More'}
+                  {isOpen ? 'Show Less' : 'Show More Code'}
                 </Button>
-              </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-0 pb-0">
-              {' '}
-              {/* Adjusted padding */}
-              {/* Footer content moved below */}
-            </CollapsibleContent>
+              </CollapsibleTrigger>
+            </div>
+            <CollapsibleContent />
           </Collapsible>
         ) : (
-          <div className="text-center text-sm text-gray-500 italic py-4 my-3 border border-dashed border-gray-200 rounded-md">
-            Code snippet not applicable for this result type.
+          <div className="bg-gray-50 text-center text-sm text-gray-500 italic py-6 px-4 border-t border-b border-gray-100">
+            Code snippet not available for this result
           </div>
         )}
       </CardContent>
 
-      {/* Footer: Badges and Button - Always rendered below code/placeholder */}
-      <div
-        className={`px-4 pb-4 pt-2 ${hasCodeSnippet && !isOpen ? 'border-t border-gray-100 mt-0' : ''} ${hasCodeSnippet && isOpen ? 'border-t border-gray-100 mt-0' : ''} ${!hasCodeSnippet ? 'border-t border-gray-100 mt-3' : ''}`}
-      >
-        {' '}
-        {/* Conditional top border */}
-        {/* Separator only shown when code is present and expanded */}
-        {hasCodeSnippet && isOpen && <Separator className="mb-3 bg-gray-200" />}
-        <div className="flex justify-between items-center pt-1">
-          <div className="flex items-center gap-2">
-            {/* Display language badge if available */}
-            {result.codeSnippet?.language && (
-              <Badge
-                variant="secondary"
-                className="flex items-center gap-1 text-xs px-2 py-0.5 bg-gray-100 text-gray-700 border-gray-200"
-              >
-                <Code className="h-3 w-3" />
-                <span>{result.codeSnippet.language}</span>
-              </Badge>
-            )}
-            <Badge
-              variant="secondary"
-              className="flex items-center gap-1 text-xs px-2 py-0.5 bg-gray-100 text-gray-700 border-gray-200"
-            >
-              <Star className="h-3 w-3 text-yellow-500" />
-              <span>{result.repository.stars}</span>
-            </Badge>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1 text-xs h-8 border-gray-300 bg-white text-gray-700 hover:bg-gray-100 hover:text-gray-900 focus-visible:ring-ring"
-            asChild
-          >
-            <a
-              href={result.html_url || result.repository.html_url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <ExternalLink className="h-3 w-3" />
-              View on GitHub
-            </a>
-          </Button>
+      {/* Footer with action buttons */}
+      <div className="px-5 py-3 bg-gradient-to-r from-indigo-50/30 to-blue-50/30 border-t border-gray-100 flex justify-between items-center">
+        <div className="text-xs text-gray-600">
+          <span className="flex items-center gap-1">
+            <svg className="h-3.5 w-3.5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Relevance match: {Math.round(result.matchScore * 100)}%</span>
+          </span>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1 text-xs h-8 bg-white border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300 focus-visible:ring-indigo-300 shadow-sm"
+          asChild
+        >
+          <a
+            href={result.html_url || result.repository.html_url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <ExternalLink className="h-3 w-3" />
+            View on GitHub
+          </a>
+        </Button>
       </div>
     </Card>
   );

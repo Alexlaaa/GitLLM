@@ -3,7 +3,7 @@
 import { useId, useState, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, X } from 'lucide-react';
+import { Search } from 'lucide-react';
 
 interface SearchBarProps {
   placeholder?: string;
@@ -40,10 +40,7 @@ const SearchBar = ({
     }
   };
 
-  const clearSearch = () => {
-    setQuery('');
-    inputRef.current?.focus();
-  };
+  // Removed unused clearSearch function
 
   return (
     <div className={`relative w-full ${className}`}>
@@ -52,7 +49,7 @@ const SearchBar = ({
           <Input
             id={id}
             ref={inputRef}
-            className="peer pr-9 pl-9 h-10 text-gray-900" // Added text-gray-900 for visibility
+            className="peer pr-9 pl-12 h-12 text-gray-900 rounded-lg border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 shadow-sm" 
             placeholder={placeholder}
             type="search"
             value={query}
@@ -61,26 +58,24 @@ const SearchBar = ({
             autoFocus={autoFocus}
             disabled={isLoading}
           />
-          <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-3 text-muted-foreground/80 peer-disabled:opacity-50">
-            {isLoading ? (
-              <div
-                className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground/20 border-t-muted-foreground/80"
-                role="status"
-                aria-label="Loading..."
-              />
-            ) : (
-              <Search size={16} strokeWidth={2} aria-hidden="true" />
-            )}
+          <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-4 text-gray-500 peer-disabled:opacity-50">
+            <Search className="h-5 w-5 text-indigo-500" aria-hidden="true" />
           </div>
-          {/* Removed custom clear button, relying on browser default for type="search" */}
         </div>
         <Button
           type="submit"
           onClick={handleSearch}
           disabled={isLoading || !query.trim()}
-          className="h-10"
+          className="h-12 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md rounded-lg"
         >
-          {isLoading ? 'Searching...' : 'Search'}
+          {isLoading ? (
+            <>
+              <div className="mr-2 h-5 w-5 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+              Searching...
+            </>
+          ) : (
+            'Find Code'
+          )}
         </Button>
       </div>
     </div>
