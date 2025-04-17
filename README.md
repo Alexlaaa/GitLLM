@@ -32,6 +32,6 @@ Copy the token to your .env.local file
 1. Create account or sign in to [Google AI Studio](https://aistudio.google.com/welcome)
 2. Navigate to the API keys section
 3. Generate a new API key
-Copy the key to your .env.local file as GEMINI_LLM_API_KEY
+4. Copy the key to your .env.local file as GEMINI_LLM_API_KEY
 
 Note: The default model is set to gemini-1.5-flash, but you can change this to another Gemini model if needed.
